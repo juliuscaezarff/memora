@@ -6,7 +6,7 @@ import { Header } from "@/components/header";
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 
-export default function App({
+export default function Bookmarks({
   session,
 }: {
   session: typeof authClient.$Infer.Session;

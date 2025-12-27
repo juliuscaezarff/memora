@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 
 import { authClient } from "@/lib/auth-client";
 
-import App from "./app";
+import Bookmarks from "./bookmarks";
 
-export default async function AppPage() {
+export default async function BookmarksPage() {
   const session = await authClient.getSession({
     fetchOptions: {
       headers: await headers(),
@@ -17,5 +17,5 @@ export default async function AppPage() {
     redirect("/");
   }
 
-  return <App session={session} />;
+  return <Bookmarks session={session} />;
 }
