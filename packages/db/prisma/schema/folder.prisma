@@ -1,0 +1,12 @@
+model Folder {
+    id             String     @id @default(cuid())
+    createdAt      DateTime   @default(now())
+    updatedAt      DateTime   @updatedAt
+    name           String
+    icon           String     @default("📁")
+    allowDuplicate Boolean    @default(true)
+    isShared       Boolean    @default(false)
+    user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId         String
+    bookmarks      Bookmark[]
+}
