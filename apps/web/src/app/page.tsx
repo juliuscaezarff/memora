@@ -133,8 +133,8 @@ export default function Home() {
           </span>
         </div>
 
-        <div className="text-gray-500 sm:text-right">
-          Last updated <span className="text-gray-300">12.02.2025</span>
+        <div className="text-stone-500 sm:text-right">
+          Last updated <span className="text-stone-300">27.12.2025</span>
         </div>
       </footer>
     </div>
