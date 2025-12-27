@@ -1,0 +1,3 @@
+{
+  "extends": "@memora/config/tsconfig.base.json"
+}
