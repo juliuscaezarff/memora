@@ -19,6 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Button } from "./ui/button";
 
 const bookmarks = [
   {
@@ -135,30 +136,30 @@ export function BookmarkList({ showImages, showMonths }: BookmarkListProps) {
                     {!showImages && (
                       <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button className="p-1.5 hover:bg-[#1a1a1a] rounded transition-colors">
-                              <Copy className="w-3.5 h-3.5 text-[#666] hover:text-[#888]" />
-                            </button>
+                          <TooltipTrigger>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </Button>
                           </TooltipTrigger>
-                          <TooltipContent
-                            side="bottom"
-                            className="bg-[#1a1a1a] border-[#262626] text-[#ededed] text-xs px-2 py-1"
-                          >
+                          <TooltipContent side="bottom">
                             Copy link
                           </TooltipContent>
                         </Tooltip>
                         <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button className="p-1.5 hover:bg-[#1a1a1a] rounded transition-colors">
-                              <Share2 className="w-3.5 h-3.5 text-[#666] hover:text-[#888]" />
-                            </button>
+                          <TooltipTrigger>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </Button>
                           </TooltipTrigger>
-                          <TooltipContent
-                            side="bottom"
-                            className="bg-[#1a1a1a] border-[#262626] text-[#ededed] text-xs px-2 py-1"
-                          >
-                            Share
-                          </TooltipContent>
+                          <TooltipContent side="bottom">Share</TooltipContent>
                         </Tooltip>
                       </div>
                     )}
@@ -178,30 +179,28 @@ export function BookmarkList({ showImages, showMonths }: BookmarkListProps) {
                   {showImages && (
                     <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button className="p-1.5 hover:bg-[#1a1a1a] rounded transition-colors">
-                            <Copy className="w-3.5 h-3.5 text-[#666] hover:text-[#888]" />
-                          </button>
+                        <TooltipTrigger>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </Button>
                         </TooltipTrigger>
-                        <TooltipContent
-                          side="bottom"
-                          className="bg-[#1a1a1a] border-[#262626] text-[#ededed] text-xs px-2 py-1"
-                        >
-                          Copy link
-                        </TooltipContent>
+                        <TooltipContent side="bottom">Copy link</TooltipContent>
                       </Tooltip>
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button className="p-1.5 hover:bg-[#1a1a1a] rounded transition-colors">
-                            <Share2 className="w-3.5 h-3.5 text-[#666] hover:text-[#888]" />
-                          </button>
+                        <TooltipTrigger>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </Button>
                         </TooltipTrigger>
-                        <TooltipContent
-                          side="bottom"
-                          className="bg-[#1a1a1a] border-[#262626] text-[#ededed] text-xs px-2 py-1"
-                        >
-                          Share
-                        </TooltipContent>
+                        <TooltipContent side="bottom">Share</TooltipContent>
                       </Tooltip>
                     </div>
                   )}
