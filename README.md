@@ -1,6 +1,10 @@
+<p align="center">
+  <img src="apps/web/public/brain.svg" alt="Memora favicon" width="96" height="96" />
+</p>
+
 # memora
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Next.js, Hono, ORPC, and more.
+Memora is a place to organize and share your bookmarks, without the usual noise.
 
 ## Features
 
