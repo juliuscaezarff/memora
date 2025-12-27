@@ -117,20 +117,25 @@ export default function Home() {
 
       {/* Footer - on black background */}
       <footer className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 text-xs sm:text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <svg
-              className="w-2.5 h-2.5 text-black ml-0.5"
-              fill="currentColor"
+              className="w-4 h-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
+              strokeWidth={1.5}
             >
-              <path d="M8 5v14l11-7z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+              />
             </svg>
+            <span className="text-gray-400">
+              <span className="text-gray-300">2,847</span> bookmarks saved
+            </span>
           </div>
-          <span className="text-gray-400">
-            Staying by Lizzy McAlpine{" "}
-            <span className="text-gray-500">· 7m ago</span>
-          </span>
         </div>
 
         <div className="text-stone-500 sm:text-right">
