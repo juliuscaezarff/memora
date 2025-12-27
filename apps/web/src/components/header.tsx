@@ -1,14 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ChevronDown,
-  Folder,
-  Plus,
-  Settings,
-  LogOut,
-  User,
-} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, Plus, Settings, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,23 +11,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { CreateFolderModal } from "@/components/create-folder-modal"
+import { CreateFolderDialog } from "@/components/create-folder-dialog";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-
-const folders = [
-  { id: 1, name: "All Bookmarks", count: 24 },
-  { id: 2, name: "Design Inspiration", count: 8 },
-  { id: 3, name: "Dev Resources", count: 12 },
-  { id: 4, name: "Read Later", count: 4 },
-];
+import { orpc } from "@/utils/orpc";
 
 export function Header() {
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session } = authClient.useSession();
+
+  const { data: folders = [] } = useQuery(orpc.folder.getAll.queryOptions());
 
   if (!session) {
     return (
@@ -43,6 +34,10 @@ export function Header() {
     );
   }
 
+  const currentFolder = selectedFolder
+    ? folders.find((f) => f.id === selectedFolder)
+    : (folders[0] ?? null);
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-sm">
@@ -50,38 +45,59 @@ export function Header() {
           {/* Folders Dropdown - Left */}
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-1.5 sm:gap-2 text-[13px] sm:text-sm text-[#ededed] hover:text-white transition-colors outline-none">
-              <Folder className="w-4 h-4 text-[#666]" />
-              <span className="max-w-[120px] sm:max-w-none truncate">
-                All Bookmarks
-              </span>
+              {currentFolder ? (
+                <>
+                  <span className="text-base">{currentFolder.icon}</span>
+                  <span className="max-w-[120px] sm:max-w-none truncate">
+                    {currentFolder.name}
+                  </span>
+                </>
+              ) : (
+                <span className="text-[#666]">No folders yet</span>
+              )}
               <ChevronDown className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-[#666]" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
               className="w-52 sm:w-56 bg-[#0a0a0a] border-[#262626] text-[#ededed]"
             >
-              {folders.map((folder) => (
+              {folders.length === 0 ? (
                 <DropdownMenuItem
-                  key={folder.id}
-                  className="flex items-center justify-between cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
+                  className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
+                  onClick={() => setIsCreateFolderOpen(true)}
                 >
-                  <div className="flex items-center gap-2">
-                    <Folder className="w-4 h-4 text-[#666]" />
-                    <span className="text-[13px] sm:text-sm">
-                      {folder.name}
-                    </span>
-                  </div>
-                  <span className="text-xs text-[#666]">{folder.count}</span>
+                  <Plus className="w-4 h-4" />
+                  <span>Create your first folder</span>
                 </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator className="bg-[#262626]" />
-              <DropdownMenuItem
-                className="flex items-center gap-2 cursor-pointer text-[#666] focus:bg-[#1a1a1a] focus:text-white"
-                onSelect={() => setIsCreateFolderOpen(true)}
-              >
-                <Plus className="w-4 h-4" />
-                <span>New folder</span>
-              </DropdownMenuItem>
+              ) : (
+                <>
+                  {folders.map((folder) => (
+                    <DropdownMenuItem
+                      key={folder.id}
+                      className="flex items-center justify-between cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
+                      onClick={() => setSelectedFolder(folder.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{folder.icon}</span>
+                        <span className="text-[13px] sm:text-sm">
+                          {folder.name}
+                        </span>
+                      </div>
+                      <span className="text-xs text-[#666]">
+                        {folder._count.bookmarks}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator className="bg-[#262626]" />
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 cursor-pointer text-[#666] focus:bg-[#1a1a1a] focus:text-white"
+                    onClick={() => setIsCreateFolderOpen(true)}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>New folder</span>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -135,7 +151,10 @@ export function Header() {
         </div>
       </header>
 
-      {/*<CreateFolderModal open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen} />*/}
+      <CreateFolderDialog
+        open={isCreateFolderOpen}
+        onOpenChange={setIsCreateFolderOpen}
+      />
     </>
   );
 }
