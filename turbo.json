@@ -39,8 +39,7 @@
       "persistent": true
     },
     "db:generate": {
-      "cache": false,
-      "persistent": true
+      "cache": false
     }
   }
 }
