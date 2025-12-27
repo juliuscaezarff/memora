@@ -20,7 +20,7 @@ export default function Bookmarks({
   const { data: folders = [] } = useQuery(orpc.folder.getAll.queryOptions());
 
   const selectedFolder = selectedFolderId
-    ? folders.find((f) => f.id === selectedFolderId)
+    ? folders.find((f: any) => f.id === selectedFolderId)
     : (folders[0] ?? null);
 
   return (
