@@ -16,7 +16,7 @@ export default function Home() {
       { provider: "google" },
       {
         onSuccess: () => {
-          router.push("/app");
+          router.push("/bookmarks");
         },
       },
     );
@@ -27,7 +27,7 @@ export default function Home() {
       { provider: "github" },
       {
         onSuccess: () => {
-          router.push("/app");
+          router.push("/bookmarks");
         },
       },
     );
