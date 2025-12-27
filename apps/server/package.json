@@ -3,8 +3,8 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "prisma generate && tsdown",
-    "postinstall": "prisma generate",
+    "build": "bunx prisma generate && tsdown",
+    "postinstall": "bunx prisma generate",
     "check-types": "tsc -b",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
     "dev": "bun run --hot src/index.ts",
