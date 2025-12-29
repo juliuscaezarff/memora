@@ -5,8 +5,15 @@ export default defineConfig({
   format: "esm",
   outDir: "./dist",
   clean: true,
-  noExternal: [/@memora\/.*/, /^@orpc\//, /^hono/, /^better-auth/],
+  noExternal: [
+    "@memora/api",
+    "@memora/auth",
+    "@memora/db",
+    "@memora/env",
+    /@orpc\/.*/,
+    "hono",
+    "better-auth",
+  ],
   external: ["@prisma/client"],
   treeshake: true,
-  bundle: true,
 });
