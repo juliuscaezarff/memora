@@ -10,6 +10,7 @@
     "start": "bun run dist/index.js"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.8",
     "hono": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/openapi": "catalog:",
