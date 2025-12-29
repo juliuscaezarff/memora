@@ -3,10 +3,10 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./src/index.ts"
+      "default": "./src/index.js"
     },
     "./*": {
-      "default": "./src/*.ts"
+      "default": "./src/*.js"
     }
   },
   "scripts": {},
