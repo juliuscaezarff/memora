@@ -21,6 +21,12 @@ export const queryClient = new QueryClient({
 
 export const link = new RPCLink({
   url: "/api/rpc",
+  fetch: (url, options) => {
+    return fetch(url, {
+      ...options,
+      credentials: "include",
+    });
+  },
   headers: async () => {
     if (typeof window !== "undefined") {
       return {};
