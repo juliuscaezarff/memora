@@ -19,31 +19,12 @@ export const queryClient = new QueryClient({
   }),
 });
 
-const getBaseUrl = () => {
-  if (typeof window !== "undefined") {
-    return "";
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return "http://localhost:3000";
-};
-
 export const link = new RPCLink({
-  url: `${getBaseUrl()}/api/rpc`,
-  fetch: (url, options) => {
-    return fetch(url, {
-      ...options,
-      credentials: "include",
-    });
-  },
-  headers: async () => {
+  url: () => {
     if (typeof window !== "undefined") {
-      return {};
+      return `${window.location.origin}/api/rpc`;
     }
-
-    const { headers } = await import("next/headers");
-    return Object.fromEntries(await headers());
+    throw new Error("RPCLink should only be used on client side");
   },
 });
 
