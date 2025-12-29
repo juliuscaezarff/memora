@@ -12,25 +12,17 @@ export default function Home() {
   const lastMethod = authClient.getLastUsedLoginMethod();
 
   const signInWithGoogle = () => {
-    authClient.signIn.social(
-      { provider: "google" },
-      {
-        onSuccess: () => {
-          router.push("/bookmarks");
-        },
-      },
-    );
+    authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/bookmarks",
+    });
   };
 
   const signInWithGithub = () => {
-    authClient.signIn.social(
-      { provider: "github" },
-      {
-        onSuccess: () => {
-          router.push("/bookmarks");
-        },
-      },
-    );
+    authClient.signIn.social({
+      provider: "github",
+      callbackURL: "/bookmarks",
+    });
   };
 
   return (
