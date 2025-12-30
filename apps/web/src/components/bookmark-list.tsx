@@ -93,7 +93,7 @@ export function BookmarkList({
         queryClient.invalidateQueries({
           queryKey: orpc.folder.getAll.queryOptions().queryKey,
         });
-        toast.success("Bookmark deleted");
+        toast("Bookmark deleted");
       },
       onError: (error, _, context) => {
         if (context?.previousBookmarks) {
@@ -106,7 +106,7 @@ export function BookmarkList({
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
-    toast.success("URL copied to clipboard");
+    toast("URL copied to clipboard");
   };
 
   const handleOpenLink = (url: string) => {

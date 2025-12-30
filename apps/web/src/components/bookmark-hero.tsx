@@ -131,7 +131,7 @@ export function BookmarkHero({
         });
 
         setInputValue("");
-        toast.success("Bookmark saved");
+        toast("Bookmark saved");
       } else {
         toast.error("Failed to fetch link metadata");
       }
