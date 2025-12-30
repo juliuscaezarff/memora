@@ -75,7 +75,7 @@ export function Header() {
                   {folders.map((folder) => (
                     <DropdownMenuItem
                       key={folder.id}
-                      className="flex items-center justify-between cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
+                      className="flex items-center justify-between cursor-pointer mb-1 focus:bg-[#1a1a1a] focus:text-white"
                       onClick={() => setSelectedFolderId(folder.id)}
                     >
                       <div className="flex items-center gap-2">
@@ -91,7 +91,7 @@ export function Header() {
                   ))}
                   <DropdownMenuSeparator className="bg-[#262626]" />
                   <DropdownMenuItem
-                    className="flex items-center gap-2 cursor-pointer text-[#666] focus:bg-[#1a1a1a] focus:text-white"
+                    className="flex items-center gap-2 mt-1 cursor-pointer text-[#666] focus:bg-[#1a1a1a] focus:text-white"
                     onClick={() => setIsCreateFolderOpen(true)}
                   >
                     <Plus className="w-4 h-4" />
@@ -121,17 +121,17 @@ export function Header() {
               align="end"
               className="w-44 sm:w-48 bg-[#0a0a0a] border-[#262626] text-[#ededed]"
             >
-              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white">
+              {/*<DropdownMenuItem className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white">
                 <User className="w-4 h-4 text-[#666]" />
                 <span>Profile</span>
-              </DropdownMenuItem>
-              <Link href="/">
+              </DropdownMenuItem>*/}
+              {/*<Link href="/">
                 <DropdownMenuItem className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white">
                   <Settings className="w-4 h-4 text-[#666]" />
                   <span>Settings</span>
                 </DropdownMenuItem>
-              </Link>
-              <DropdownMenuSeparator className="bg-[#262626]" />
+              </Link>*/}
+              {/*<DropdownMenuSeparator className="bg-[#262626]" />*/}
               <DropdownMenuItem
                 className="flex items-center gap-2 cursor-pointer text-[#888] focus:bg-[#1a1a1a] focus:text-white"
                 variant="destructive"

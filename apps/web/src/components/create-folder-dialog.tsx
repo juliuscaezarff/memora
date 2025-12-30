@@ -83,7 +83,7 @@ export function CreateFolderDialog({
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey });
         setSelectedFolderId(data.id);
-        toast.success("Folder created");
+        toast("Folder created");
         handleClose();
       },
       onError: (error, _, context) => {

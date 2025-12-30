@@ -1,40 +1,26 @@
 import type { ToasterProps } from "sonner";
 
-import {
-  CircleCheckIcon,
-  InfoIcon,
-  Loader2Icon,
-  OctagonXIcon,
-  TriangleAlertIcon,
-} from "lucide-react";
-import { useTheme } from "next-themes";
+import { CheckCircleIcon, Loader2 } from "lucide-react";
 import { Toaster as Sonner } from "sonner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
-      className="toaster group"
+      position="bottom-center"
       icons={{
-        success: <CircleCheckIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
-        error: <OctagonXIcon className="size-4" />,
-        loading: <Loader2Icon className="size-4 animate-spin" />,
+        success: (
+          <CheckCircleIcon
+            className="size-3 text-[#ededed]"
+            strokeWidth={2.5}
+          />
+        ),
+        loading: <Loader2 className="size-3 text-[#ededed] animate-spin" />,
       }}
-      style={
-        {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
-        } as React.CSSProperties
-      }
       toastOptions={{
+        unstyled: true,
         classNames: {
-          toast: "cn-toast",
+          toast:
+            "flex items-center gap-1.5 bg-[#0a0a0a] border border-[#262626] text-[#ededed] text-xs px-2 py-1.5 rounded-full",
         },
       }}
       {...props}
