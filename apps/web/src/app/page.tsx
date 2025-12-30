@@ -57,7 +57,7 @@ export default function Home() {
             animate={{ opacity: 1, transition: { delay: 0.8 } }}
             exit={{ opacity: 0 }}
           >
-            <div className="flex w-full items-center justify-center flex-col md:flex-row md:gap-4 gap-6">
+            <div className="flex w-full items-center justify-center flex-row md:gap-4 gap-6">
               <div className="relative">
                 <motion.button
                   whileTap={{
