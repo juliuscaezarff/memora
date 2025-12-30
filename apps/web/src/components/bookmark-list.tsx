@@ -1,28 +1,17 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import {
-  Copy,
-  Share2,
-  ExternalLink,
-  MoreHorizontal,
-  Trash2,
-  Globe,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Copy, Share2, Globe, CircleCheck } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "./ui/button";
-import { orpc, queryClient } from "@/utils/orpc";
+import { BookmarkActions } from "./bookmark-actions";
+import { orpc } from "@/utils/orpc";
 
 type Bookmark = {
   id: string;
@@ -63,6 +52,8 @@ export function BookmarkList({
   showMonths,
   selectedFolderId,
 }: BookmarkListProps) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const { data: bookmarks = [] } = useQuery({
     ...orpc.bookmark.getByFolder.queryOptions({
       input: { folderId: selectedFolderId ?? "" },
@@ -70,50 +61,17 @@ export function BookmarkList({
     enabled: !!selectedFolderId,
   });
 
-  const bookmarkQueryKey = orpc.bookmark.getByFolder.queryOptions({
-    input: { folderId: selectedFolderId ?? "" },
-  }).queryKey;
-
-  const deleteBookmark = useMutation(
-    orpc.bookmark.delete.mutationOptions({
-      onMutate: async ({ id }) => {
-        await queryClient.cancelQueries({ queryKey: bookmarkQueryKey });
-
-        const previousBookmarks =
-          queryClient.getQueryData<Bookmark[]>(bookmarkQueryKey);
-
-        queryClient.setQueryData<Bookmark[]>(bookmarkQueryKey, (old = []) =>
-          old.filter((b) => b.id !== id),
-        );
-
-        return { previousBookmarks };
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: bookmarkQueryKey });
-        queryClient.invalidateQueries({
-          queryKey: orpc.folder.getAll.queryOptions().queryKey,
-        });
-        toast("Bookmark deleted");
-      },
-      onError: (error, _, context) => {
-        if (context?.previousBookmarks) {
-          queryClient.setQueryData(bookmarkQueryKey, context.previousBookmarks);
-        }
-        toast.error(error.message || "Failed to delete bookmark");
-      },
-    }),
-  );
-
-  const handleCopyUrl = (url: string) => {
+  const handleCopyUrl = (url: string, bookmarkId: string) => {
     navigator.clipboard.writeText(url);
-    toast("URL copied to clipboard");
+    setCopiedId(bookmarkId);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleOpenLink = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  const handleShare = async (url: string, title: string) => {
+  const handleShare = async (
+    url: string,
+    title: string,
+    bookmarkId: string,
+  ) => {
     if (navigator.share) {
       try {
         await navigator.share({ title, url });
@@ -121,7 +79,7 @@ export function BookmarkList({
         // User cancelled or share failed
       }
     } else {
-      handleCopyUrl(url);
+      handleCopyUrl(url, bookmarkId);
     }
   };
 
@@ -193,7 +151,7 @@ export function BookmarkList({
                     />
                   </span>
 
-                  {/* OG Image - menor em mobile */}
+                  {/* OG Image */}
                   {showImages && (
                     <div className="w-[60px] h-[34px] sm:w-[100px] sm:h-[56px] rounded overflow-hidden bg-[#111] flex-shrink-0">
                       {bookmark.ogImageUrl ? (
@@ -258,13 +216,37 @@ export function BookmarkList({
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
-                              onClick={() => handleCopyUrl(bookmark.url)}
+                              onClick={() =>
+                                handleCopyUrl(bookmark.url, bookmark.id)
+                              }
                             >
-                              <Copy className="w-3.5 h-3.5" />
+                              <AnimatePresence mode="wait">
+                                {copiedId === bookmark.id ? (
+                                  <motion.div
+                                    key="check"
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0, opacity: 0 }}
+                                    transition={{ duration: 0.15 }}
+                                  >
+                                    <CircleCheck className="w-3.5 h-3.5 text-emerald-500" />
+                                  </motion.div>
+                                ) : (
+                                  <motion.div
+                                    key="copy"
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0, opacity: 0 }}
+                                    transition={{ duration: 0.15 }}
+                                  >
+                                    <Copy className="w-3.5 h-3.5" />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="bottom">
-                            Copy link
+                            {copiedId === bookmark.id ? "Copied!" : "Copy link"}
                           </TooltipContent>
                         </Tooltip>
                         <Tooltip>
@@ -274,7 +256,11 @@ export function BookmarkList({
                               size="icon"
                               className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
                               onClick={() =>
-                                handleShare(bookmark.url, bookmark.title)
+                                handleShare(
+                                  bookmark.url,
+                                  bookmark.title,
+                                  bookmark.id,
+                                )
                               }
                             >
                               <Share2 className="w-3.5 h-3.5" />
@@ -310,12 +296,38 @@ export function BookmarkList({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
-                            onClick={() => handleCopyUrl(bookmark.url)}
+                            onClick={() =>
+                              handleCopyUrl(bookmark.url, bookmark.id)
+                            }
                           >
-                            <Copy className="w-3.5 h-3.5" />
+                            <AnimatePresence mode="wait">
+                              {copiedId === bookmark.id ? (
+                                <motion.div
+                                  key="check"
+                                  initial={{ scale: 0, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0, opacity: 0 }}
+                                  transition={{ duration: 0.15 }}
+                                >
+                                  <CircleCheck className="w-3.5 h-3.5 text-emerald-500" />
+                                </motion.div>
+                              ) : (
+                                <motion.div
+                                  key="copy"
+                                  initial={{ scale: 0, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0, opacity: 0 }}
+                                  transition={{ duration: 0.15 }}
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom">Copy link</TooltipContent>
+                        <TooltipContent side="bottom">
+                          {copiedId === bookmark.id ? "Copied!" : "Copy link"}
+                        </TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger>
@@ -324,7 +336,11 @@ export function BookmarkList({
                             size="icon"
                             className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
                             onClick={() =>
-                              handleShare(bookmark.url, bookmark.title)
+                              handleShare(
+                                bookmark.url,
+                                bookmark.title,
+                                bookmark.id,
+                              )
                             }
                           >
                             <Share2 className="w-3.5 h-3.5" />
@@ -335,48 +351,10 @@ export function BookmarkList({
                     </div>
                   )}
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="p-1.5 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-[#1a1a1a] rounded transition-all outline-none">
-                      <MoreHorizontal className="w-4 h-4 text-[#666]" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-36 sm:w-40 bg-[#0a0a0a] border-[#262626] text-[#ededed]"
-                    >
-                      <DropdownMenuItem
-                        className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
-                        onClick={() => handleOpenLink(bookmark.url)}
-                      >
-                        <ExternalLink className="w-4 h-4 text-[#666]" />
-                        <span className="text-[13px]">Open link</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
-                        onClick={() => handleCopyUrl(bookmark.url)}
-                      >
-                        <Copy className="w-4 h-4 text-[#666]" />
-                        <span className="text-[13px]">Copy URL</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
-                        onClick={() =>
-                          handleShare(bookmark.url, bookmark.title)
-                        }
-                      >
-                        <Share2 className="w-4 h-4 text-[#666]" />
-                        <span className="text-[13px]">Share</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="flex items-center gap-2 cursor-pointer text-red-400 focus:bg-[#1a1a1a] focus:text-red-400"
-                        onClick={() =>
-                          deleteBookmark.mutate({ id: bookmark.id })
-                        }
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="text-[13px]">Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <BookmarkActions
+                    bookmark={bookmark}
+                    currentFolderId={selectedFolderId}
+                  />
                 </div>
               </div>
             ))}
