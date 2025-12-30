@@ -25,7 +25,7 @@ export const folderRouter = {
       z.object({
         name: z.string().min(1).max(50),
         icon: z.string().min(1).max(10).default("📁"),
-      })
+      }),
     )
     .handler(async ({ input, context }) => {
       return await prisma.folder.create({
@@ -43,7 +43,7 @@ export const folderRouter = {
         id: z.string(),
         name: z.string().min(1).max(50).optional(),
         icon: z.string().min(1).max(10).optional(),
-      })
+      }),
     )
     .handler(async ({ input, context }) => {
       return await prisma.folder.update({
@@ -65,6 +65,36 @@ export const folderRouter = {
         where: {
           id: input.id,
           userId: context.session.user.id,
+        },
+      });
+    }),
+
+  toggleShare: protectedProcedure
+    .input(z.object({ id: z.string(), isShared: z.boolean() }))
+    .handler(async ({ input, context }) => {
+      return await prisma.folder.update({
+        where: {
+          id: input.id,
+          userId: context.session.user.id,
+        },
+        data: {
+          isShared: input.isShared,
+        },
+      });
+    }),
+
+  getById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .handler(async ({ input, context }) => {
+      return await prisma.folder.findUnique({
+        where: {
+          id: input.id,
+          userId: context.session.user.id,
+        },
+        include: {
+          _count: {
+            select: { bookmarks: true },
+          },
         },
       });
     }),
