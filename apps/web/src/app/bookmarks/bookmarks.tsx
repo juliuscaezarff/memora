@@ -1,48 +1,68 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookmarkHero } from "@/components/bookmark-hero";
 import { BookmarkList } from "@/components/bookmark-list";
 import { Header } from "@/components/header";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
-import { useState } from "react";
+import { useFolderStore } from "@/stores/folder-store";
+import { useLayoutStore } from "@/stores/layout-store";
 
 export default function Bookmarks({
   session,
 }: {
   session: typeof authClient.$Infer.Session;
 }) {
-  const [showImages, setShowImages] = useState(false);
-  const [showMonths, setShowMonths] = useState(false);
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const { selectedFolderId, setSelectedFolderId } = useFolderStore();
+  const { getSettings, setShowImages, setShowMonths } = useLayoutStore();
 
-  const { data: folders = [] } = useQuery(orpc.folder.getAll.queryOptions());
+  const { data: folders = [], isLoading } = useQuery(
+    orpc.folder.getAll.queryOptions(),
+  );
+
+  // Auto-select first folder if none selected or selected doesn't exist
+  useEffect(() => {
+    if (folders.length > 0) {
+      const folderExists = folders.some((f) => f.id === selectedFolderId);
+      if (!selectedFolderId || !folderExists) {
+        setSelectedFolderId(folders[0].id);
+      }
+    }
+  }, [folders, selectedFolderId, setSelectedFolderId]);
 
   const selectedFolder = selectedFolderId
-    ? folders.find((f: any) => f.id === selectedFolderId)
+    ? folders.find((f) => f.id === selectedFolderId)
     : (folders[0] ?? null);
+
+  const currentFolderId = selectedFolder?.id ?? null;
+  const settings = currentFolderId
+    ? getSettings(currentFolderId)
+    : { showImages: false, showMonths: false };
 
   return (
     <div className="min-h-screen bg-black">
-      <Header
-        selectedFolderId={selectedFolderId}
-        onFolderChange={setSelectedFolderId}
-      />
+      <Header />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <BookmarkHero
-          showImages={showImages}
-          setShowImages={setShowImages}
-          showMonths={showMonths}
-          setShowMonths={setShowMonths}
-          selectedFolderId={selectedFolder?.id ?? null}
+          showImages={settings.showImages}
+          setShowImages={(value) =>
+            currentFolderId && setShowImages(currentFolderId, value)
+          }
+          showMonths={settings.showMonths}
+          setShowMonths={(value) =>
+            currentFolderId && setShowMonths(currentFolderId, value)
+          }
+          selectedFolderId={currentFolderId}
           selectedFolderIcon={selectedFolder?.icon ?? null}
           selectedFolderName={selectedFolder?.name ?? null}
+          isLoading={isLoading}
         />
         <BookmarkList
-          showImages={showImages}
-          showMonths={showMonths}
-          selectedFolderId={selectedFolder?.id ?? null}
+          showImages={settings.showImages}
+          showMonths={settings.showMonths}
+          selectedFolderId={currentFolderId}
         />
       </div>
     </div>

@@ -26,6 +26,7 @@ import {
   EmojiPickerSearch,
 } from "@/components/ui/emoji-picker";
 import { orpc, queryClient } from "@/utils/orpc";
+import { useFolderStore } from "@/stores/folder-store";
 
 interface CreateFolderDialogProps {
   open: boolean;
@@ -51,6 +52,7 @@ export function CreateFolderDialog({
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("📁");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const { setSelectedFolderId } = useFolderStore();
 
   const queryKey = orpc.folder.getAll.queryOptions().queryKey;
 
@@ -78,8 +80,9 @@ export function CreateFolderDialog({
 
         return { previousFolders };
       },
-      onSuccess: () => {
+      onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey });
+        setSelectedFolderId(data.id);
         toast.success("Folder created");
         handleClose();
       },

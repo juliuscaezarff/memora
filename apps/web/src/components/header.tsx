@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, Plus, Settings, User } from "lucide-react";
 import {
@@ -17,25 +17,15 @@ import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
+import { useFolderStore } from "@/stores/folder-store";
 
-interface HeaderProps {
-  selectedFolderId?: string | null;
-  onFolderChange?: (folderId: string | null) => void;
-}
-
-export function Header({ selectedFolderId, onFolderChange }: HeaderProps) {
+export function Header() {
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const { selectedFolderId, setSelectedFolderId } = useFolderStore();
 
   const { data: folders = [] } = useQuery(orpc.folder.getAll.queryOptions());
-
-  // Auto-select first folder when folders load and none is selected
-  useEffect(() => {
-    if (folders.length > 0 && !selectedFolderId && onFolderChange) {
-      onFolderChange(folders[0].id);
-    }
-  }, [folders, selectedFolderId, onFolderChange]);
 
   if (!session) {
     return (
@@ -85,8 +75,8 @@ export function Header({ selectedFolderId, onFolderChange }: HeaderProps) {
                   {folders.map((folder) => (
                     <DropdownMenuItem
                       key={folder.id}
-                      className="flex items-center justify-between mb-1 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
-                      onClick={() => onFolderChange?.(folder.id)}
+                      className="flex items-center justify-between cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
+                      onClick={() => setSelectedFolderId(folder.id)}
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-base">{folder.icon}</span>
@@ -101,7 +91,7 @@ export function Header({ selectedFolderId, onFolderChange }: HeaderProps) {
                   ))}
                   <DropdownMenuSeparator className="bg-[#262626]" />
                   <DropdownMenuItem
-                    className="flex items-center mt-1 gap-2 cursor-pointer text-[#666] focus:bg-[#1a1a1a] focus:text-white"
+                    className="flex items-center gap-2 cursor-pointer text-[#666] focus:bg-[#1a1a1a] focus:text-white"
                     onClick={() => setIsCreateFolderOpen(true)}
                   >
                     <Plus className="w-4 h-4" />
@@ -136,14 +126,14 @@ export function Header({ selectedFolderId, onFolderChange }: HeaderProps) {
                 <span>Profile</span>
               </DropdownMenuItem>
               <Link href="/">
-                <DropdownMenuItem className="flex items-center mb-1 gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white">
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white">
                   <Settings className="w-4 h-4 text-[#666]" />
                   <span>Settings</span>
                 </DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator className="bg-[#262626]" />
               <DropdownMenuItem
-                className="flex items-center mt-1 gap-2 cursor-pointer text-[#888] focus:bg-[#1a1a1a] focus:text-white"
+                className="flex items-center gap-2 cursor-pointer text-[#888] focus:bg-[#1a1a1a] focus:text-white"
                 variant="destructive"
                 onClick={() => {
                   authClient.signOut({

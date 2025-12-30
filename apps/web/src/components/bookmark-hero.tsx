@@ -25,6 +25,7 @@ interface BookmarkHeroProps {
   selectedFolderId: string | null;
   selectedFolderIcon: string | null;
   selectedFolderName: string | null;
+  isLoading?: boolean;
 }
 
 interface Metadata {
@@ -55,9 +56,10 @@ export function BookmarkHero({
   selectedFolderId,
   selectedFolderIcon,
   selectedFolderName,
+  isLoading: isFolderLoading = false,
 }: BookmarkHeroProps) {
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const bookmarkQueryKey = orpc.bookmark.getByFolder.queryOptions({
     input: { folderId: selectedFolderId ?? "" },
@@ -108,7 +110,7 @@ export function BookmarkHero({
     const url = inputValue.trim();
     if (!url || !selectedFolderId) return;
 
-    setIsLoading(true);
+    setIsSaving(true);
 
     try {
       // Fetch metadata
@@ -136,12 +138,12 @@ export function BookmarkHero({
     } catch {
       toast.error("Failed to save bookmark");
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !isLoading && inputValue.trim()) {
+    if (e.key === "Enter" && !isSaving && inputValue.trim()) {
       e.preventDefault();
       handleSubmit();
     }
@@ -151,69 +153,79 @@ export function BookmarkHero({
     <div className="mb-8 sm:mb-12">
       {/* Folder icon like Notion */}
       <div className="mb-3 sm:mb-4">
-        <span className="text-3xl sm:text-4xl">
-          {selectedFolderIcon ?? "📁"}
-        </span>
+        {isFolderLoading ? (
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#1a1a1a] rounded animate-pulse" />
+        ) : (
+          <span className="text-3xl sm:text-4xl">
+            {selectedFolderIcon ?? "📁"}
+          </span>
+        )}
       </div>
 
       {/* Title with layout settings dropdown */}
       <div className="flex items-center gap-2 mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-[32px] font-bold text-[#ededed] tracking-tight">
-          {selectedFolderName ?? "No folder selected"}
-        </h1>
+        {isFolderLoading ? (
+          <div className="h-8 sm:h-9 w-40 bg-[#1a1a1a] rounded animate-pulse" />
+        ) : (
+          <h1 className="text-2xl sm:text-[32px] font-bold text-[#ededed] tracking-tight">
+            {selectedFolderName ?? "No folder selected"}
+          </h1>
+        )}
 
-        <Tooltip>
-          <TooltipTrigger>
-            <span>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="p-1.5 hover:bg-[#1a1a1a] rounded transition-colors outline-none">
-                  <Settings2 className="w-4 h-4 text-[#4a4a4a] hover:text-[#666]" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  className="w-48 sm:w-52 bg-[#0a0a0a] border-[#262626] p-2"
-                >
-                  {/* Show Images toggle */}
-                  <div className="flex items-center justify-between px-2 py-2 rounded hover:bg-[#1a1a1a] transition-colors">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4 text-[#666]" />
-                      <span className="text-[13px] text-[#ededed]">
-                        Show image
-                      </span>
+        {!isFolderLoading && (
+          <Tooltip>
+            <TooltipTrigger>
+              <span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="p-1.5 hover:bg-[#1a1a1a] rounded transition-colors outline-none">
+                    <Settings2 className="w-4 h-4 text-[#4a4a4a] hover:text-[#666]" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    className="w-48 sm:w-52 bg-[#0a0a0a] border-[#262626] p-2"
+                  >
+                    {/* Show Images toggle */}
+                    <div className="flex items-center justify-between px-2 py-2 rounded hover:bg-[#1a1a1a] transition-colors">
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4 text-[#666]" />
+                        <span className="text-[13px] text-[#ededed]">
+                          Show image
+                        </span>
+                      </div>
+                      <Switch
+                        checked={showImages}
+                        onCheckedChange={setShowImages}
+                        className="data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333] h-4 w-7"
+                      />
                     </div>
-                    <Switch
-                      checked={showImages}
-                      onCheckedChange={setShowImages}
-                      className="data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333] h-4 w-7"
-                    />
-                  </div>
 
-                  {/* Show Months toggle */}
-                  <div className="flex items-center justify-between px-2 py-2 rounded hover:bg-[#1a1a1a] transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-[#666]" />
-                      <span className="text-[13px] text-[#ededed]">
-                        Show months
-                      </span>
+                    {/* Show Months toggle */}
+                    <div className="flex items-center justify-between px-2 py-2 rounded hover:bg-[#1a1a1a] transition-colors">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-[#666]" />
+                        <span className="text-[13px] text-[#ededed]">
+                          Show months
+                        </span>
+                      </div>
+                      <Switch
+                        checked={showMonths}
+                        onCheckedChange={setShowMonths}
+                        className="data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333] h-4 w-7"
+                      />
                     </div>
-                    <Switch
-                      checked={showMonths}
-                      onCheckedChange={setShowMonths}
-                      className="data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333] h-4 w-7"
-                    />
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent
-            side="right"
-            sideOffset={10}
-            className="bg-[#1a1a1a] border-[#262626] text-[#ededed] text-xs px-2 py-1"
-          >
-            Layout settings
-          </TooltipContent>
-        </Tooltip>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent
+              side="right"
+              sideOffset={10}
+              className="bg-[#1a1a1a] border-[#262626] text-[#ededed] text-xs px-2 py-1"
+            >
+              Layout settings
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       {/* Input field like "who to bother" */}
@@ -226,11 +238,11 @@ export function BookmarkHero({
           placeholder={
             selectedFolderId ? "paste a link to save" : "select a folder first"
           }
-          disabled={!selectedFolderId || isLoading}
+          disabled={!selectedFolderId || isSaving || isFolderLoading}
           className="w-full bg-transparent border border-[#262626] rounded-md px-3 sm:px-3 py-2 sm:py-2 text-[14px] sm:text-[15px] text-[#ededed] placeholder:text-[#4a4a4a] focus:outline-none focus:border-[#404040] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-          {isLoading ? (
+          {isSaving ? (
             <Loader2 className="w-4 h-4 text-[#4a4a4a] animate-spin" />
           ) : (
             <Link2 className="w-4 h-4 text-[#4a4a4a]" />
