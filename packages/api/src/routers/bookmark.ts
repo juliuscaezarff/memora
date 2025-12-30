@@ -38,7 +38,7 @@ export const bookmarkRouter = {
         ogImageUrl: z.string().nullable().optional(),
         description: z.string().nullable().optional(),
         folderId: z.string(),
-      })
+      }),
     )
     .handler(async ({ input, context }) => {
       // Verify the folder belongs to the user
@@ -99,6 +99,45 @@ export const bookmarkRouter = {
       return await prisma.bookmark.delete({
         where: {
           id: input.id,
+        },
+      });
+    }),
+
+  move: protectedProcedure
+    .input(z.object({ id: z.string(), targetFolderId: z.string() }))
+    .handler(async ({ input, context }) => {
+      // Verify the bookmark belongs to a folder owned by the user
+      const bookmark = await prisma.bookmark.findFirst({
+        where: {
+          id: input.id,
+        },
+        include: {
+          folder: true,
+        },
+      });
+
+      if (!bookmark || bookmark.folder.userId !== context.session.user.id) {
+        throw new Error("Bookmark not found");
+      }
+
+      // Verify the target folder belongs to the user
+      const targetFolder = await prisma.folder.findFirst({
+        where: {
+          id: input.targetFolderId,
+          userId: context.session.user.id,
+        },
+      });
+
+      if (!targetFolder) {
+        throw new Error("Target folder not found");
+      }
+
+      return await prisma.bookmark.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          folderId: input.targetFolderId,
         },
       });
     }),
