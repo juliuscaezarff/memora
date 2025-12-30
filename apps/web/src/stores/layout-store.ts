@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useEffect, useState } from "react";
 
 interface FolderLayoutSettings {
   showImages: boolean;
@@ -7,7 +8,6 @@ interface FolderLayoutSettings {
 }
 
 interface LayoutState {
-  // Settings per folder (keyed by folderId)
   folderSettings: Record<string, FolderLayoutSettings>;
   getSettings: (folderId: string) => FolderLayoutSettings;
   setShowImages: (folderId: string, value: boolean) => void;
@@ -51,6 +51,28 @@ export const useLayoutStore = create<LayoutState>()(
     }),
     {
       name: "memora-layout",
-    }
-  )
+    },
+  ),
 );
+
+export const useLayoutStoreHydrated = () => {
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const unsubFinishHydration = useLayoutStore.persist.onFinishHydration(
+      () => {
+        setHydrated(true);
+      },
+    );
+
+    if (useLayoutStore.persist.hasHydrated()) {
+      setHydrated(true);
+    }
+
+    return () => {
+      unsubFinishHydration();
+    };
+  }, []);
+
+  return hydrated;
+};
