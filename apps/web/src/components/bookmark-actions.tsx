@@ -11,6 +11,7 @@ import {
   Trash2,
   FolderInput,
   CircleCheck,
+  PanelRight,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -23,6 +24,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { LinkPreviewDrawer } from "./link-preview-drawer";
 import { orpc, queryClient } from "@/utils/orpc";
 
 type Bookmark = {
@@ -47,6 +49,7 @@ export function BookmarkActions({
   currentFolderId,
 }: BookmarkActionsProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const { data: folders = [] } = useQuery(orpc.folder.getAll.queryOptions());
 
@@ -163,6 +166,13 @@ export function BookmarkActions({
         </DropdownMenuItem>
         <DropdownMenuItem
           className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
+          onClick={() => setShowPreview(true)}
+        >
+          <PanelRight className="w-4 h-4 text-[#666]" />
+          <span className="text-[13px]">Preview</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
           onClick={handleCopyUrl}
         >
           <AnimatePresence mode="wait">
@@ -234,6 +244,13 @@ export function BookmarkActions({
           <span className="text-[13px]">Delete</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
+
+      <LinkPreviewDrawer
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        url={bookmark.url}
+        title={bookmark.title}
+      />
     </DropdownMenu>
   );
 }
