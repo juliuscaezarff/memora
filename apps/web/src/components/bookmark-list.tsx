@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Copy, Share2, Globe, CircleCheck } from "lucide-react";
+import { Copy, PanelBottom, Globe, CircleCheck } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   Tooltip,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "./ui/button";
 import { BookmarkActions } from "./bookmark-actions";
+import { LinkPreviewDrawer } from "./link-preview-drawer";
 import { orpc } from "@/utils/orpc";
 
 type Bookmark = {
@@ -53,6 +54,7 @@ export function BookmarkList({
   selectedFolderId,
 }: BookmarkListProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [previewBookmark, setPreviewBookmark] = useState<Bookmark | null>(null);
 
   const { data: bookmarks = [] } = useQuery({
     ...orpc.bookmark.getByFolder.queryOptions({
@@ -67,20 +69,8 @@ export function BookmarkList({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleShare = async (
-    url: string,
-    title: string,
-    bookmarkId: string,
-  ) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, url });
-      } catch {
-        // User cancelled or share failed
-      }
-    } else {
-      handleCopyUrl(url, bookmarkId);
-    }
+  const handlePreview = (bookmark: Bookmark) => {
+    setPreviewBookmark(bookmark);
   };
 
   if (!selectedFolderId) {
@@ -255,18 +245,12 @@ export function BookmarkList({
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
-                              onClick={() =>
-                                handleShare(
-                                  bookmark.url,
-                                  bookmark.title,
-                                  bookmark.id,
-                                )
-                              }
+                              onClick={() => handlePreview(bookmark)}
                             >
-                              <Share2 className="w-3.5 h-3.5" />
+                              <PanelBottom className="w-3.5 h-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom">Share</TooltipContent>
+                          <TooltipContent side="bottom">Preview</TooltipContent>
                         </Tooltip>
                       </div>
                     )}
@@ -335,18 +319,12 @@ export function BookmarkList({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
-                            onClick={() =>
-                              handleShare(
-                                bookmark.url,
-                                bookmark.title,
-                                bookmark.id,
-                              )
-                            }
+                            onClick={() => handlePreview(bookmark)}
                           >
-                            <Share2 className="w-3.5 h-3.5" />
+                            <PanelBottom className="w-3.5 h-3.5" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom">Share</TooltipContent>
+                        <TooltipContent side="bottom">Preview</TooltipContent>
                       </Tooltip>
                     </div>
                   )}
@@ -361,6 +339,13 @@ export function BookmarkList({
           </div>
         </div>
       ))}
+
+      <LinkPreviewDrawer
+        open={!!previewBookmark}
+        onOpenChange={(open) => !open && setPreviewBookmark(null)}
+        url={previewBookmark?.url ?? ""}
+        title={previewBookmark?.title ?? ""}
+      />
     </div>
   );
 }
