@@ -4,7 +4,6 @@ import { protectedProcedure, publicProcedure } from "../index";
 import { bookmarkRouter } from "./bookmark";
 import { folderRouter } from "./folder";
 import { publicRouter } from "./public";
-import { todoRouter } from "./todo";
 
 export const appRouter = {
   healthCheck: publicProcedure.handler(() => {
@@ -16,7 +15,7 @@ export const appRouter = {
       user: context.session?.user,
     };
   }),
-  todo: todoRouter,
+
   folder: folderRouter,
   bookmark: bookmarkRouter,
   public: publicRouter,
