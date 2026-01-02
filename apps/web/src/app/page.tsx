@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { GithubIcon, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
+
+const PixelCD = dynamic(() => import("@/components/ui/pixel-cd"), {
+  ssr: false,
+});
 
 export default function Home() {
   const lastMethod = authClient.getLastUsedLoginMethod();
@@ -34,7 +39,7 @@ export default function Home() {
       {/* Main content - white card with rounded bottom corners */}
       <main className="flex-1 bg-white rounded-b-[24px] md:rounded-b-[40px] flex items-center justify-center px-4 sm:px-6 py-12 sm:py-0">
         <div className="max-w-xl w-full">
-          <Image src="/brain.svg" alt="Brain" width={85} height={85} />
+          <PixelCD />
 
           {/* Name */}
           <h1 className="text-lg sm:text-xl font-medium text-black">Memora</h1>

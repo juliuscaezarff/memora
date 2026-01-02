@@ -18,6 +18,8 @@
     "@orpc/tanstack-query": "^1.12.2",
     "@orpc/zod": "catalog:",
     "@prisma/client": "catalog:",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "@tanstack/react-form": "^1.27.3",
     "@tanstack/react-query": "^5.90.12",
     "@vercel/analytics": "^1.6.1",
@@ -44,13 +46,14 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@memora/config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.10",
+    "@tanstack/react-query-devtools": "^5.91.1",
     "@types/node": "^20",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.182.0",
     "tailwindcss": "^4.1.10",
-    "typescript": "catalog:",
-    "@tanstack/react-query-devtools": "^5.91.1",
-    "@memora/config": "workspace:*"
+    "typescript": "catalog:"
   }
 }
