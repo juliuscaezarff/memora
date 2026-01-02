@@ -11,6 +11,7 @@ import {
   Globe,
   Copy,
   CircleCheck,
+  Trash2,
 } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { orpc, queryClient } from "@/utils/orpc";
+import { useFolderStore } from "@/stores/folder-store";
 
 interface BookmarkHeroProps {
   showImages: boolean;
@@ -76,6 +78,7 @@ export function BookmarkHero({
   const [inputValue, setInputValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { setSelectedFolderId } = useFolderStore();
 
   // Fetch folder to get isShared status
   const { data: folder } = useQuery({
@@ -123,6 +126,21 @@ export function BookmarkHero({
           queryClient.setQueryData(folderQueryKey, context.previousFolder);
         }
         toast.error(error.message || "Failed to update sharing");
+      },
+    }),
+  );
+
+  const deleteFolder = useMutation(
+    orpc.folder.delete.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.folder.getAll.queryOptions().queryKey,
+        });
+        setSelectedFolderId(null);
+        toast("Folder deleted");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to delete folder");
       },
     }),
   );
@@ -224,9 +242,13 @@ export function BookmarkHero({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDeleteFolder = () => {
+    if (!selectedFolderId) return;
+    deleteFolder.mutate({ id: selectedFolderId });
+  };
+
   return (
     <div className="mb-8 sm:mb-12">
-      {/* Folder icon like Notion */}
       <div className="mb-3 sm:mb-4">
         {isFolderLoading ? (
           <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#1a1a1a] rounded animate-pulse" />
@@ -237,7 +259,6 @@ export function BookmarkHero({
         )}
       </div>
 
-      {/* Title with layout settings dropdown */}
       <div className="flex items-center justify-between mb-6 sm:mb-8">
         <div className="flex items-center gap-2">
           {isFolderLoading ? (
@@ -258,10 +279,9 @@ export function BookmarkHero({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="start"
-                      className="w-48 sm:w-52 bg-[#0a0a0a] border-[#262626] p-2"
+                      className="w-48 sm:w-52 bg-[#0a0a0a] border-[#262626]"
                     >
-                      {/* Show Images toggle */}
-                      <div className="flex items-center justify-between px-2 py-2 rounded hover:bg-[#1a1a1a] transition-colors">
+                      <div className="flex items-center justify-between px-2 py-2 rounded-md hover:bg-[#1a1a1a] transition-colors">
                         <div className="flex items-center gap-2">
                           <ImageIcon className="w-4 h-4 text-[#666]" />
                           <span className="text-[13px] text-[#ededed]">
@@ -274,9 +294,7 @@ export function BookmarkHero({
                           className="data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333] h-4 w-7"
                         />
                       </div>
-
-                      {/* Show Months toggle */}
-                      <div className="flex items-center justify-between px-2 py-2 rounded hover:bg-[#1a1a1a] transition-colors">
+                      <div className="flex items-center justify-between px-2 py-2 rounded-md hover:bg-[#1a1a1a] transition-colors">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-[#666]" />
                           <span className="text-[13px] text-[#ededed]">
@@ -288,6 +306,20 @@ export function BookmarkHero({
                           onCheckedChange={setShowMonths}
                           className="data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333] h-4 w-7"
                         />
+                      </div>
+                      <div className="mt-1 pt-1 border-t border-[#262626]">
+                        <button
+                          onClick={handleDeleteFolder}
+                          disabled={deleteFolder.isPending}
+                          className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="text-[13px]">
+                            {deleteFolder.isPending
+                              ? "Deleting..."
+                              : "Delete folder"}
+                          </span>
+                        </button>
                       </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -304,7 +336,6 @@ export function BookmarkHero({
           )}
         </div>
 
-        {/* Share popover - only show for authenticated users */}
         {!isFolderLoading && !isPublicView && selectedFolderId && (
           <Tooltip>
             <TooltipTrigger>
@@ -402,7 +433,6 @@ export function BookmarkHero({
         )}
       </div>
 
-      {/* Input field - only show for authenticated users */}
       {!isPublicView && (
         <div className="relative">
           <input
