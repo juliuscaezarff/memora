@@ -1,50 +1,44 @@
-"use client";
+import { LoginButtons } from "@/components/login-buttons";
+import { LoginAnimation } from "@/components/login-animation";
+import { PixelCDWrapper } from "@/components/pixel-cd-wrapper";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
-import { motion } from "motion/react";
-import Image from "next/image";
-import { GithubIcon, Loader2 } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { Badge } from "@/components/ui/badge";
+async function getLastCommitDate(): Promise<string> {
+  try {
+    const res = await fetch(
+      "https://api.github.com/repos/juliuscaezarff/memora/commits?per_page=1",
+      { next: { revalidate: 3600 } }, // revalidate every hour
+    );
 
-const PixelCD = dynamic(() => import("@/components/ui/pixel-cd"), {
-  ssr: false,
-});
+    if (!res.ok) return "Recently";
 
-export default function Home() {
-  const lastMethod = authClient.getLastUsedLoginMethod();
-  const [loadingProvider, setLoadingProvider] = useState<
-    "google" | "github" | null
-  >(null);
+    const commits = await res.json();
+    if (commits.length > 0) {
+      const date = new Date(commits[0].commit.author.date);
+      return date
+        .toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+        .replace(/\//g, ".");
+    }
+  } catch {
+    return "Recently";
+  }
 
-  const signInWithGoogle = () => {
-    setLoadingProvider("google");
-    authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/bookmarks",
-    });
-  };
+  return "Recently";
+}
 
-  const signInWithGithub = () => {
-    setLoadingProvider("github");
-    authClient.signIn.social({
-      provider: "github",
-      callbackURL: "/bookmarks",
-    });
-  };
+export default async function Home() {
+  const lastUpdated = await getLastCommitDate();
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Main content - white card with rounded bottom corners */}
       <main className="flex-1 bg-white rounded-b-[24px] md:rounded-b-[40px] flex items-center justify-center px-4 sm:px-6 py-12 sm:py-0">
         <div className="max-w-xl w-full">
-          <PixelCD />
-
-          {/* Name */}
+          <PixelCDWrapper />
           <h1 className="text-lg sm:text-xl font-medium text-black">Memora</h1>
-
-          {/* Location */}
           <p className="text-gray-500 text-sm mb-4 sm:mb-6">
             Somewhere on the web
           </p>
@@ -60,66 +54,12 @@ export default function Home() {
             Memora is a place to organize and share your bookmarks, without the
             usual noise.
           </p>
-          <motion.div
-            className="flex items-center gap-2 md:pt-8 pt-16"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { delay: 0.8 } }}
-          >
-            <div className="flex w-full items-center justify-center flex-row md:gap-4 gap-6">
-              <div className="relative">
-                <button
-                  onClick={signInWithGoogle}
-                  disabled={loadingProvider !== null}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-black w-36 h-9 text-sm font-normal text-white no-underline transition-opacity hover:opacity-80 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {loadingProvider === "google" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <p>Sign in with</p>
-                      <Image
-                        src="/google.ico"
-                        alt="Google logo"
-                        width={18}
-                        height={18}
-                      />
-                    </div>
-                  )}
-                </button>
-                {lastMethod === "google" && (
-                  <Badge className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0 h-4">
-                    Last used
-                  </Badge>
-                )}
-              </div>
-              <div className="hidden h-4 w-0.5 rounded-full bg-stone-700 md:block" />
-              <div className="relative">
-                <button
-                  onClick={signInWithGithub}
-                  disabled={loadingProvider !== null}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-black w-36 h-9 text-sm font-normal text-white no-underline transition-opacity hover:opacity-80 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {loadingProvider === "github" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <p>Sign in with</p>
-                      <GithubIcon className="h-5 w-5" />
-                    </div>
-                  )}
-                </button>
-                {lastMethod === "github" && (
-                  <Badge className="absolute -top-2 -right-2 text-[10px] text-white px-1.5 py-0 h-4 rounded-md bg-black border border-stone-600">
-                    Last used
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </motion.div>
+
+          <LoginAnimation>
+            <LoginButtons />
+          </LoginAnimation>
         </div>
       </main>
-
-      {/* Footer - on black background */}
       <footer className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 text-xs sm:text-sm">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -143,7 +83,7 @@ export default function Home() {
         </div>
 
         <div className="text-stone-500 sm:text-right">
-          Last updated <span className="text-stone-300">01.01.2026</span>
+          Last updated <span className="text-stone-300">{lastUpdated}</span>
         </div>
       </footer>
     </div>
