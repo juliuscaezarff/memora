@@ -58,3 +58,7 @@ dev-dist
 .dev.vars*
 
 .open-next
+
+# xmcp
+.xmcp
+xmcp-env.d.ts

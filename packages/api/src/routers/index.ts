@@ -1,6 +1,7 @@
 import type { RouterClient } from "@orpc/server";
 
 import { protectedProcedure, publicProcedure } from "../index";
+import { apiKeyRouter } from "./api-key";
 import { bookmarkRouter } from "./bookmark";
 import { folderRouter } from "./folder";
 import { publicRouter } from "./public";
@@ -15,7 +16,7 @@ export const appRouter = {
       user: context.session?.user,
     };
   }),
-
+  apiKey: apiKeyRouter,
   folder: folderRouter,
   bookmark: bookmarkRouter,
   public: publicRouter,
