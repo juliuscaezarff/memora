@@ -1,0 +1,13 @@
+model ApiKey {
+    id        String   @id @default(cuid())
+    key       String   @unique
+    name      String   @default("Default")
+    createdAt DateTime @default(now())
+    lastUsedAt DateTime?
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId    String
+
+    @@index([key])
+    @@index([userId])
+    @@map("api_key")
+}

@@ -112,7 +112,7 @@ export function CreateFolderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0a0a0a] border-[#262626] text-[#ededed] sm:max-w-[400px]">
+      <DialogContent className="bg-[#0a0a0a] border-[#262626] text-[#ededed] sm:max-w-[400px] rounded-sm">
         <DialogHeader>
           <DialogTitle className="text-[#ededed]">
             Create new folder
@@ -129,7 +129,7 @@ export function CreateFolderDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-12 w-12 text-2xl bg-[#1a1a1a] border-[#262626] hover:bg-[#262626] hover:border-[#404040]"
+                  className="h-12 w-12 text-2xl mt-3 bg-[#1a1a1a] border-[#262626] hover:bg-[#262626] hover:border-[#404040] rounded-sm"
                 >
                   {icon}
                 </Button>
@@ -139,7 +139,7 @@ export function CreateFolderDialog({
                 align="start"
               >
                 <EmojiPicker
-                  className="h-[320px] bg-[#0a0a0a]"
+                  className="h-[320px] bg-[#0a0a0a] rounded-sm"
                   onEmojiSelect={({ emoji }) => {
                     setIcon(emoji);
                     setEmojiPickerOpen(false);
@@ -163,7 +163,7 @@ export function CreateFolderDialog({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="My folder"
-                className="bg-[#1a1a1a] border-[#262626] text-[#ededed] placeholder:text-[#4a4a4a] focus:border-[#404040]"
+                className="bg-[#1a1a1a] border-[#262626] text-[#ededed] placeholder:text-[#4a4a4a] focus:border-[#404040] rounded-sm"
                 autoFocus
               />
             </div>
@@ -174,14 +174,14 @@ export function CreateFolderDialog({
               type="button"
               variant="ghost"
               onClick={handleClose}
-              className="text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
+              className="text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a] rounded-sm"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={createFolder.isPending || !name.trim()}
-              className="bg-[#ededed] text-[#0a0a0a] hover:bg-[#d4d4d4]"
+              className="bg-[#ededed] text-[#0a0a0a] hover:bg-[#d4d4d4] rounded-sm"
             >
               {createFolder.isPending ? "Creating..." : "Create folder"}
             </Button>

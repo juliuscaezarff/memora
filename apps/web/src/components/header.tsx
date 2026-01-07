@@ -121,17 +121,13 @@ export function Header() {
               align="end"
               className="w-44 sm:w-48 bg-[#0a0a0a] border-[#262626] text-[#ededed]"
             >
-              {/*<DropdownMenuItem className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white">
-                <User className="w-4 h-4 text-[#666]" />
-                <span>Profile</span>
-              </DropdownMenuItem>*/}
-              {/*<Link href="/">
+              <Link href="/settings">
                 <DropdownMenuItem className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white">
                   <Settings className="w-4 h-4 text-[#666]" />
                   <span>Settings</span>
                 </DropdownMenuItem>
-              </Link>*/}
-              {/*<DropdownMenuSeparator className="bg-[#262626]" />*/}
+              </Link>
+              <DropdownMenuSeparator className="bg-[#262626] mt-1 mb-1" />
               <DropdownMenuItem
                 className="flex items-center gap-2 cursor-pointer text-[#888] focus:bg-[#1a1a1a] focus:text-white"
                 variant="destructive"

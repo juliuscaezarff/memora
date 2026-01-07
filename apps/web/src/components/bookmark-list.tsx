@@ -205,7 +205,7 @@ export function BookmarkList({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
+                              className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a] rounded-sm"
                               onClick={() =>
                                 handleCopyUrl(bookmark.url, bookmark.id)
                               }
@@ -244,7 +244,7 @@ export function BookmarkList({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
+                              className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a] rounded-sm"
                               onClick={() => handlePreview(bookmark)}
                             >
                               <PanelBottom className="w-3.5 h-3.5" />
