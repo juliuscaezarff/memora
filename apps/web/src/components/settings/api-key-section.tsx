@@ -18,11 +18,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { orpc, queryClient } from "@/utils/orpc";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
-
 export function ApiKeySection() {
   const [showUrl, setShowUrl] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   const { data: apiKey, isLoading } = useQuery(orpc.apiKey.get.queryOptions());
 
@@ -56,7 +56,7 @@ export function ApiKeySection() {
     }),
   );
 
-  const mcpUrl = apiKey?.key ? `${BASE_URL}/mcp/${apiKey.key}` : "";
+  const mcpUrl = apiKey?.key ? `${baseUrl}/mcp/${apiKey.key}` : "";
 
   const copyToClipboard = async () => {
     if (mcpUrl) {
@@ -68,7 +68,7 @@ export function ApiKeySection() {
   };
 
   const maskedUrl = apiKey?.key
-    ? `${BASE_URL}/mcp/${apiKey.key.slice(0, 6)}${"•".repeat(12)}${apiKey.key.slice(-4)}`
+    ? `${baseUrl}/mcp/${apiKey.key.slice(0, 6)}${"•".repeat(12)}${apiKey.key.slice(-4)}`
     : "";
 
   if (isLoading) {
