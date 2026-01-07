@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Key, Copy, RefreshCw, Eye, EyeOff, Check } from "lucide-react";
+import { Link2, Copy, RefreshCw, Eye, EyeOff, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +18,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { orpc, queryClient } from "@/utils/orpc";
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
+
 export function ApiKeySection() {
-  const [showKey, setShowKey] = useState(false);
+  const [showUrl, setShowUrl] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const { data: apiKey, isLoading } = useQuery(orpc.apiKey.get.queryOptions());
@@ -30,11 +32,11 @@ export function ApiKeySection() {
         queryClient.invalidateQueries({
           queryKey: orpc.apiKey.get.queryOptions().queryKey,
         });
-        setShowKey(true);
-        toast.success("API key generated");
+        setShowUrl(true);
+        toast.success("MCP URL generated");
       },
       onError: () => {
-        toast.error("Failed to generate API key");
+        toast.error("Failed to generate MCP URL");
       },
     }),
   );
@@ -45,26 +47,28 @@ export function ApiKeySection() {
         queryClient.invalidateQueries({
           queryKey: orpc.apiKey.get.queryOptions().queryKey,
         });
-        setShowKey(true);
-        toast.success("API key regenerated");
+        setShowUrl(true);
+        toast.success("MCP URL regenerated");
       },
       onError: () => {
-        toast.error("Failed to regenerate API key");
+        toast.error("Failed to regenerate MCP URL");
       },
     }),
   );
 
+  const mcpUrl = apiKey?.key ? `${BASE_URL}/mcp/${apiKey.key}` : "";
+
   const copyToClipboard = async () => {
-    if (apiKey?.key) {
-      await navigator.clipboard.writeText(apiKey.key);
+    if (mcpUrl) {
+      await navigator.clipboard.writeText(mcpUrl);
       setCopied(true);
-      toast.success("Copied to clipboard");
+      toast.success("MCP URL copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const maskedKey = apiKey?.key
-    ? `${apiKey.key.slice(0, 6)}${"•".repeat(20)}${apiKey.key.slice(-4)}`
+  const maskedUrl = apiKey?.key
+    ? `${BASE_URL}/mcp/${apiKey.key.slice(0, 6)}${"•".repeat(12)}${apiKey.key.slice(-4)}`
     : "";
 
   if (isLoading) {
@@ -73,7 +77,7 @@ export function ApiKeySection() {
         <h2 className="text-xs font-medium text-[#666] uppercase tracking-wider mb-4">
           MCP Integration
         </h2>
-        <div className="bg-[#0a0a0a] border border-[#262626] rounded-lg p-4">
+        <div className="bg-[#0a0a0a] border border-[#262626] rounded-sm p-4">
           <div className="h-20 bg-[#1a1a1a] rounded animate-pulse" />
         </div>
       </section>
@@ -86,16 +90,16 @@ export function ApiKeySection() {
         MCP Integration
       </h2>
 
-      <div className="bg-[#0a0a0a] border border-[#262626] rounded-lg p-4">
+      <div className="bg-[#0a0a0a] border border-[#262626] rounded-sm p-4">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 bg-[#1a1a1a] rounded-lg flex items-center justify-center shrink-0">
-            <Key className="w-5 h-5 text-[#666]" />
+          <div className="w-10 h-10 bg-[#1a1a1a] rounded-sm flex items-center justify-center shrink-0">
+            <Link2 className="w-5 h-5 text-[#666]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-[#ededed] mb-1">API Key</p>
+            <p className="text-sm text-[#ededed] mb-1">MCP Server URL</p>
             <p className="text-xs text-[#666] leading-relaxed">
-              Generate a key to connect your bookmarks with AI assistants like
-              Claude, ChatGPT, or any MCP-compatible client
+              Use this URL to connect your bookmarks with Claude, ChatGPT, or
+              any MCP-compatible client
             </p>
           </div>
         </div>
@@ -103,16 +107,16 @@ export function ApiKeySection() {
         {apiKey ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="flex-1 bg-[#1a1a1a] border border-[#262626] rounded-md px-3 py-2 font-mono text-xs text-[#888] overflow-hidden">
-                {showKey ? apiKey.key : maskedKey}
+              <div className="flex-1 bg-[#1a1a1a] border border-[#262626] rounded-sm px-3 py-2 font-mono text-xs text-[#888] overflow-hidden text-ellipsis">
+                {showUrl ? mcpUrl : maskedUrl}
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowKey(!showKey)}
+                onClick={() => setShowUrl(!showUrl)}
                 className="h-9 w-9 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a] rounded-sm"
               >
-                {showKey ? (
+                {showUrl ? (
                   <EyeOff className="w-4 h-4" />
                 ) : (
                   <Eye className="w-4 h-4" />
@@ -134,7 +138,7 @@ export function ApiKeySection() {
 
             <div className="flex items-center justify-between">
               <p className="text-xs text-[#666]">
-                Keep this key secret. Do not share it publicly.
+                Keep this URL secret. Do not share it publicly.
               </p>
               <AlertDialog>
                 <AlertDialogTrigger>
@@ -147,24 +151,24 @@ export function ApiKeySection() {
                     Regenerate
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="bg-[#0a0a0a] border-[#262626]">
+                <AlertDialogContent className="bg-[#0a0a0a] border-[#262626] rounded-sm">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-[#ededed]">
-                      Regenerate API Key?
+                      Regenerate MCP URL?
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-[#666]">
-                      This will invalidate your current key. Any integrations
-                      using the old key will stop working.
+                      This will invalidate your current URL. Any integrations
+                      using the old URL will stop working.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-transparent border-[#262626] text-[#888] hover:bg-[#1a1a1a] hover:text-[#ededed]">
+                    <AlertDialogCancel className="bg-transparent border-[#262626] text-[#888] hover:bg-[#1a1a1a] hover:text-[#ededed] rounded-sm">
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => regenerateKey.mutate({})}
                       disabled={regenerateKey.isPending}
-                      className="bg-[#ededed] text-[#0a0a0a] hover:bg-[#d4d4d4]"
+                      className="bg-[#ededed] text-[#0a0a0a] hover:bg-[#d4d4d4] rounded-sm"
                     >
                       {regenerateKey.isPending
                         ? "Regenerating..."
@@ -179,7 +183,7 @@ export function ApiKeySection() {
           <Button
             onClick={() => createKey.mutate({})}
             disabled={createKey.isPending}
-            className="w-full bg-[#1a1a1a] border border-[#262626] text-[#ededed] hover:bg-[#262626] hover:border-[#404040] text-sm h-10 transition-all"
+            className="w-full bg-[#1a1a1a] border border-[#262626] text-[#ededed] hover:bg-[#262626] hover:border-[#404040] text-sm h-10 rounded-sm transition-all"
           >
             {createKey.isPending ? (
               <>
@@ -188,8 +192,8 @@ export function ApiKeySection() {
               </>
             ) : (
               <>
-                <Key className="w-4 h-4 mr-2" />
-                Generate API Key
+                <Link2 className="w-4 h-4 mr-2" />
+                Generate MCP URL
               </>
             )}
           </Button>
