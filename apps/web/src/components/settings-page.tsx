@@ -10,7 +10,7 @@ import Link from "next/link";
 export function SettingsPage() {
   return (
     <div className="min-h-screen bg-black">
-      <header className="sticky top-0 z-50 w-full bg-black border-b border-[#1a1a1a]">
+      <header className="sticky top-0 z-50 w-full">
         <div className="w-full px-4 sm:px-6 h-12 sm:h-14 flex items-center">
           <Link
             href="/bookmarks"

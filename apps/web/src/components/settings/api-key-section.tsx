@@ -110,7 +110,7 @@ export function ApiKeySection() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowKey(!showKey)}
-                className="h-9 w-9 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
+                className="h-9 w-9 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a] rounded-sm"
               >
                 {showKey ? (
                   <EyeOff className="w-4 h-4" />
@@ -122,7 +122,7 @@ export function ApiKeySection() {
                 variant="ghost"
                 size="icon"
                 onClick={copyToClipboard}
-                className="h-9 w-9 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
+                className="h-9 w-9 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a] rounded-sm"
               >
                 {copied ? (
                   <Check className="w-4 h-4 text-green-500" />
@@ -141,7 +141,7 @@ export function ApiKeySection() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs text-[#888] hover:text-[#ededed] hover:bg-[#1a1a1a] h-8 px-2"
+                    className="text-xs text-[#888] hover:text-[#ededed] hover:bg-[#1a1a1a] h-8 px-2 rounded-sm"
                   >
                     <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
                     Regenerate

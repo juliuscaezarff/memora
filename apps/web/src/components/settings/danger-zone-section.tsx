@@ -34,13 +34,13 @@ export function DangerZoneSection() {
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-transparent border-[#3d1f1f] text-[#ff6369] hover:bg-[#2a1515] hover:text-[#ff6369] hover:border-[#4d2525] text-xs h-8"
+                className="bg-transparent border-[#3d1f1f] text-[#ff6369] hover:bg-[#2a1515] hover:text-[#ff6369] hover:border-[#4d2525] text-xs h-8 rounded-sm"
               >
                 <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                 Delete
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-[#0a0a0a] border-[#262626]">
+            <AlertDialogContent className="bg-[#0a0a0a] border-[#262626] rounded-sm">
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-[#ededed]">
                   Are you absolutely sure?
@@ -51,10 +51,10 @@ export function DangerZoneSection() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="bg-transparent border-[#262626] text-[#888] hover:bg-[#1a1a1a] hover:text-[#ededed]">
+                <AlertDialogCancel className="bg-transparent border-[#262626] text-[#888] hover:bg-[#1a1a1a] hover:text-[#ededed] rounded-sm">
                   Cancel
                 </AlertDialogCancel>
-                <AlertDialogAction className="bg-[#3d1f1f] border-[#4d2525] text-[#ff6369] hover:bg-[#4d2525]">
+                <AlertDialogAction className="bg-[#3d1f1f] border-[#4d2525] text-[#ff6369] hover:bg-[#4d2525] rounded-sm">
                   Delete account
                 </AlertDialogAction>
               </AlertDialogFooter>
