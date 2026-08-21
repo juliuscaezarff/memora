@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Copy,
@@ -42,16 +42,16 @@ type Bookmark = {
 interface BookmarkActionsProps {
   bookmark: Bookmark;
   currentFolderId: string;
+  folders: Array<{ id: string; name: string; icon: string }>;
 }
 
 export function BookmarkActions({
   bookmark,
   currentFolderId,
+  folders,
 }: BookmarkActionsProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-
-  const { data: folders = [] } = useQuery(orpc.folder.getAll.queryOptions());
 
   const bookmarkQueryKey = orpc.bookmark.getByFolder.queryOptions({
     input: { folderId: currentFolderId },
