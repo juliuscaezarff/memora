@@ -26,10 +26,17 @@ type Bookmark = {
   updatedAt: Date;
 };
 
+type Folder = {
+  id: string;
+  name: string;
+  icon: string;
+};
+
 interface BookmarkListProps {
   showImages: boolean;
   showMonths: boolean;
   selectedFolderId: string | null;
+  folders: Folder[];
 }
 
 function formatMonth(date: Date): string {
@@ -52,11 +59,12 @@ export function BookmarkList({
   showImages,
   showMonths,
   selectedFolderId,
+  folders,
 }: BookmarkListProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [previewBookmark, setPreviewBookmark] = useState<Bookmark | null>(null);
 
-  const { data: bookmarks = [] } = useQuery({
+  const { data: bookmarks = [], isPending } = useQuery({
     ...orpc.bookmark.getByFolder.queryOptions({
       input: { folderId: selectedFolderId ?? "" },
     }),
@@ -77,6 +85,16 @@ export function BookmarkList({
     return (
       <div className="text-center py-12 text-[#4a4a4a]">
         <p>Create a folder to start saving bookmarks</p>
+      </div>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div className="space-y-3" role="status" aria-label="Loading bookmarks">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="h-10 rounded bg-[#111] animate-pulse" />
+        ))}
       </div>
     );
   }
@@ -126,6 +144,8 @@ export function BookmarkList({
                       <img
                         src={bookmark.faviconUrl}
                         alt=""
+                        loading="lazy"
+                        decoding="async"
                         className="w-4 h-4 rounded-sm"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
@@ -148,6 +168,8 @@ export function BookmarkList({
                         <img
                           src={bookmark.ogImageUrl}
                           alt=""
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.src = "";
@@ -332,6 +354,7 @@ export function BookmarkList({
                   <BookmarkActions
                     bookmark={bookmark}
                     currentFolderId={selectedFolderId}
+                    folders={folders}
                   />
                 </div>
               </div>
