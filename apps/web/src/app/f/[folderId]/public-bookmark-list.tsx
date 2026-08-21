@@ -126,6 +126,8 @@ export function PublicBookmarkList({
                       <img
                         src={bookmark.faviconUrl}
                         alt=""
+                        loading="lazy"
+                        decoding="async"
                         className="w-4 h-4 rounded-sm"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
@@ -148,6 +150,8 @@ export function PublicBookmarkList({
                         <img
                           src={bookmark.ogImageUrl}
                           alt=""
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.src = "";
