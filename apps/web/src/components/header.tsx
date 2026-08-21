@@ -13,27 +13,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateFolderDialog } from "@/components/create-folder-dialog";
 import Link from "next/link";
-import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { orpc } from "@/utils/orpc";
+import { orpc, queryClient } from "@/utils/orpc";
 import { useFolderStore } from "@/stores/folder-store";
 
-export function Header() {
+export function Header({
+  session,
+}: {
+  session: typeof authClient.$Infer.Session;
+}) {
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const router = useRouter();
-  const { data: session } = authClient.useSession();
   const { selectedFolderId, setSelectedFolderId } = useFolderStore();
 
   const { data: folders = [] } = useQuery(orpc.folder.getAll.queryOptions());
-
-  if (!session) {
-    return (
-      <Link href="/">
-        <Button variant="outline">Sign In</Button>
-      </Link>
-    );
-  }
 
   const currentFolder = selectedFolderId
     ? folders.find((f) => f.id === selectedFolderId)
@@ -77,6 +71,13 @@ export function Header() {
                       key={folder.id}
                       className="flex items-center justify-between cursor-pointer mb-1 focus:bg-[#1a1a1a] focus:text-white"
                       onClick={() => setSelectedFolderId(folder.id)}
+                      onMouseEnter={() => {
+                        queryClient.prefetchQuery(
+                          orpc.bookmark.getByFolder.queryOptions({
+                            input: { folderId: folder.id },
+                          }),
+                        );
+                      }}
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-base">{folder.icon}</span>
