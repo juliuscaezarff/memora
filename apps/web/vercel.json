@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd ../.. && bun install && bun run build --filter=web...",
-  "installCommand": "echo 'skip'",
+  "buildCommand": "cd ../.. && bun run build --filter=web...",
+  "installCommand": "cd ../.. && bun install --frozen-lockfile",
   "framework": "nextjs"
 }
