@@ -13,7 +13,7 @@ import {
   CircleCheck,
   Trash2,
 } from "lucide-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -51,6 +51,17 @@ interface Metadata {
   ogImageUrl: string | null;
 }
 
+function normalizeBookmarkUrl(input: string) {
+  const withProtocol = /^https?:\/\//i.test(input) ? input : `https://${input}`;
+  const parsed = new URL(withProtocol);
+
+  return {
+    url: parsed.toString(),
+    title: parsed.hostname.replace(/^www\./, ""),
+    faviconUrl: `${parsed.origin}/favicon.ico`,
+  };
+}
+
 type Bookmark = {
   id: string;
   url: string;
@@ -80,50 +91,32 @@ export function BookmarkHero({
   const [copied, setCopied] = useState(false);
   const { setSelectedFolderId } = useFolderStore();
 
-  // Fetch folder to get isShared status
-  const { data: folder } = useQuery({
-    ...orpc.folder.getById.queryOptions({
-      input: { id: selectedFolderId ?? "" },
-    }),
-    enabled: !!selectedFolderId && !isPublicView,
-  });
-
-  const isShared = folder?.isShared ?? initialIsShared;
+  const isShared = initialIsShared;
 
   const bookmarkQueryKey = orpc.bookmark.getByFolder.queryOptions({
     input: { folderId: selectedFolderId ?? "" },
   }).queryKey;
 
-  const folderQueryKey = orpc.folder.getById.queryOptions({
-    input: { id: selectedFolderId ?? "" },
-  }).queryKey;
-
-  type FolderData = typeof folder;
+  const foldersQueryKey = orpc.folder.getAll.queryOptions().queryKey;
 
   const toggleShare = useMutation(
     orpc.folder.toggleShare.mutationOptions({
-      onMutate: async ({ isShared: newIsShared }) => {
-        await queryClient.cancelQueries({ queryKey: folderQueryKey });
+      onMutate: async ({ id, isShared: newIsShared }) => {
+        await queryClient.cancelQueries({ queryKey: foldersQueryKey });
 
-        const previousFolder =
-          queryClient.getQueryData<FolderData>(folderQueryKey);
+        const previousFolders = queryClient.getQueryData(foldersQueryKey);
 
-        queryClient.setQueryData<FolderData>(folderQueryKey, (old) => {
-          if (!old) return old;
-          return { ...old, isShared: newIsShared };
-        });
+        queryClient.setQueryData(foldersQueryKey, (old = []) =>
+          old.map((folder) =>
+            folder.id === id ? { ...folder, isShared: newIsShared } : folder,
+          ),
+        );
 
-        return { previousFolder };
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: folderQueryKey });
-        queryClient.invalidateQueries({
-          queryKey: orpc.folder.getAll.queryOptions().queryKey,
-        });
+        return { previousFolders };
       },
       onError: (error, _, context) => {
-        if (context?.previousFolder) {
-          queryClient.setQueryData(folderQueryKey, context.previousFolder);
+        if (context?.previousFolders) {
+          queryClient.setQueryData(foldersQueryKey, context.previousFolders);
         }
         toast.error(error.message || "Failed to update sharing");
       },
@@ -145,17 +138,56 @@ export function BookmarkHero({
     }),
   );
 
+  const updateMetadata = useMutation(
+    orpc.bookmark.updateMetadata.mutationOptions({
+      onSuccess: (updatedBookmark) => {
+        queryClient.setQueryData<Bookmark[]>(bookmarkQueryKey, (old = []) =>
+          old.map((bookmark) =>
+            bookmark.id === updatedBookmark.id ? updatedBookmark : bookmark,
+          ),
+        );
+      },
+    }),
+  );
+
+  const enrichBookmark = async (bookmark: Bookmark) => {
+    try {
+      const response = await fetch(
+        `/api/metadata?url=${encodeURIComponent(bookmark.url)}`,
+      );
+      if (!response.ok) return;
+
+      const metadata: Metadata = await response.json();
+      if (!metadata.title) return;
+
+      updateMetadata.mutate({
+        id: bookmark.id,
+        title: metadata.title,
+        faviconUrl: metadata.faviconUrl,
+        ogImageUrl: metadata.ogImageUrl,
+        description: metadata.description,
+      });
+    } catch {
+      // The bookmark is already saved with URL-derived metadata.
+    }
+  };
+
   const createBookmark = useMutation(
     orpc.bookmark.create.mutationOptions({
       onMutate: async (newBookmark) => {
-        await queryClient.cancelQueries({ queryKey: bookmarkQueryKey });
+        await Promise.all([
+          queryClient.cancelQueries({ queryKey: bookmarkQueryKey }),
+          queryClient.cancelQueries({ queryKey: foldersQueryKey }),
+        ]);
 
         const previousBookmarks =
           queryClient.getQueryData<Bookmark[]>(bookmarkQueryKey);
+        const previousFolders = queryClient.getQueryData(foldersQueryKey);
+        const temporaryId = `temp-${crypto.randomUUID()}`;
 
         queryClient.setQueryData<Bookmark[]>(bookmarkQueryKey, (old = []) => [
           {
-            id: `temp-${Date.now()}`,
+            id: temporaryId,
             url: newBookmark.url,
             title: newBookmark.title,
             faviconUrl: newBookmark.faviconUrl ?? null,
@@ -168,57 +200,62 @@ export function BookmarkHero({
           ...old,
         ]);
 
-        return { previousBookmarks };
+        queryClient.setQueryData(foldersQueryKey, (old = []) =>
+          old.map((folder) =>
+            folder.id === newBookmark.folderId
+              ? {
+                  ...folder,
+                  _count: {
+                    bookmarks: folder._count.bookmarks + 1,
+                  },
+                }
+              : folder,
+          ),
+        );
+
+        return { previousBookmarks, previousFolders, temporaryId };
       },
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: bookmarkQueryKey });
-        // Also invalidate folder count
-        queryClient.invalidateQueries({
-          queryKey: orpc.folder.getAll.queryOptions().queryKey,
-        });
+      onSuccess: (bookmark, _, context) => {
+        queryClient.setQueryData<Bookmark[]>(bookmarkQueryKey, (old = []) =>
+          old.map((item) =>
+            item.id === context.temporaryId ? bookmark : item,
+          ),
+        );
+        void enrichBookmark(bookmark);
+        setIsSaving(false);
       },
       onError: (error, _, context) => {
         if (context?.previousBookmarks) {
           queryClient.setQueryData(bookmarkQueryKey, context.previousBookmarks);
         }
+        if (context?.previousFolders) {
+          queryClient.setQueryData(foldersQueryKey, context.previousFolders);
+        }
+        setIsSaving(false);
         toast.error(error.message || "Failed to save bookmark");
       },
     }),
   );
 
-  const handleSubmit = async () => {
-    const url = inputValue.trim();
-    if (!url || !selectedFolderId) return;
-
-    setIsSaving(true);
+  const handleSubmit = () => {
+    const input = inputValue.trim();
+    if (!input || !selectedFolderId) return;
 
     try {
-      // Fetch metadata
-      const response = await fetch(
-        `/api/metadata?url=${encodeURIComponent(url)}`,
-      );
-      const metadata: Metadata = await response.json();
-
-      if (metadata.url) {
-        // Create bookmark with metadata
-        createBookmark.mutate({
-          url: metadata.url,
-          title: metadata.title,
-          faviconUrl: metadata.faviconUrl,
-          ogImageUrl: metadata.ogImageUrl,
-          description: metadata.description,
-          folderId: selectedFolderId,
-        });
-
-        setInputValue("");
-        toast("Bookmark saved");
-      } else {
-        toast.error("Failed to fetch link metadata");
-      }
+      const normalized = normalizeBookmarkUrl(input);
+      setIsSaving(true);
+      setInputValue("");
+      createBookmark.mutate({
+        url: normalized.url,
+        title: normalized.title,
+        faviconUrl: normalized.faviconUrl,
+        ogImageUrl: null,
+        description: null,
+        folderId: selectedFolderId,
+      });
+      toast("Bookmark saved");
     } catch {
-      toast.error("Failed to save bookmark");
-    } finally {
-      setIsSaving(false);
+      toast.error("Please enter a valid URL");
     }
   };
 
