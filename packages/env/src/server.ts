@@ -6,6 +6,7 @@ export const env = createEnv({
   server: {
     DATABASE_URL: z.string().min(1),
     BETTER_AUTH_SECRET: z.string().min(32),
+    CORS_ORIGIN: z.string().url(),
     NODE_ENV: z
       .enum(["development", "production", "test"])
       .default("development"),
@@ -13,6 +14,7 @@ export const env = createEnv({
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+    CORS_ORIGIN: process.env.CORS_ORIGIN,
     NODE_ENV: process.env.NODE_ENV,
   },
   emptyStringAsUndefined: true,
