@@ -8,13 +8,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { orpc, queryClient } from "@/utils/orpc";
 import { useFolderStore } from "@/stores/folder-store";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/user-avatar";
 
 type HeaderFolder = {
   id: string;
@@ -108,17 +108,12 @@ export function Header({
           {/* Avatar Dropdown - Right */}
           <DropdownMenu>
             <DropdownMenuTrigger className="outline-none">
-              <Avatar className="h-7 w-7 cursor-pointer border border-[#262626] transition-colors hover:border-[#404040] sm:h-8 sm:w-8">
-                <AvatarImage src={session.user.image ?? undefined} />
-                <AvatarFallback className="bg-[#1a1a1a] text-[#ededed] text-xs">
-                  {session.user.name
-                    ?.split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2) ?? "U"}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                avatarSeed={session.user.avatarSeed}
+                className="h-7 w-7 cursor-pointer transition-[box-shadow] duration-100 hover:after:border-[#404040] sm:h-8 sm:w-8"
+                image={session.user.image}
+                name={session.user.name}
+              />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
