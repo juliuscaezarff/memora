@@ -1,91 +1,96 @@
-import { LoginButtons } from "@/components/login-buttons";
 import { LoginAnimation } from "@/components/login-animation";
-import { PixelCDWrapper } from "@/components/pixel-cd-wrapper";
+import { LoginButtons } from "@/components/login-buttons";
+import { PixelCubeWrapper } from "@/components/pixel-cube-wrapper";
 
-async function getLastCommitDate(): Promise<string> {
-  try {
-    const res = await fetch(
-      "https://api.github.com/repos/juliuscaezarff/memora/commits?per_page=1",
-      { next: { revalidate: 3600 } }, // revalidate every hour
-    );
+const features = [
+	"save links before they disappear",
+	"share folders with anyone",
+	"organize everything with labels",
+	"find your bookmarks through MCP",
+];
 
-    if (!res.ok) return "Recently";
+export default function Home() {
+	return (
+		<main className="flex min-h-svh items-center overflow-x-hidden bg-[#050505] text-[#f1f1ef]">
+			<div className="w-full max-w-[640px] px-5 py-8 sm:px-8 sm:py-10 md:ms-[clamp(4rem,10.75vw,10rem)] md:px-0">
+				<div className="mb-8 size-20 sm:mb-10 sm:size-24">
+					<PixelCubeWrapper />
+				</div>
 
-    const commits = await res.json();
-    if (commits.length > 0) {
-      const date = new Date(commits[0].commit.author.date);
-      return date
-        .toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-        .replace(/\//g, ".");
-    }
-  } catch {
-    return "Recently";
-  }
+				<section aria-labelledby="home-heading" className="font-mono">
+					<h1
+						id="home-heading"
+						className="text-balance font-medium text-2xl text-[#f2f2f0] leading-[1.15] tracking-[-0.025em]"
+					>
+						Save the web. Remember what matters.
+					</h1>
 
-  return "Recently";
-}
+					<p className="mt-8 max-w-[38rem] text-pretty text-[#777775] text-base leading-relaxed">
+						Memora keeps your links, ideas and small discoveries in one quiet
+						place — ready when you need them.
+					</p>
 
-export default async function Home() {
-  const lastUpdated = await getLastCommitDate();
+					<LoginAnimation>
+						<LoginButtons />
+					</LoginAnimation>
 
-  return (
-    <div className="min-h-screen bg-black flex flex-col">
-      {/* Main content - white card with rounded bottom corners */}
-      <main className="flex-1 bg-white rounded-b-[24px] md:rounded-b-[40px] flex items-center justify-center px-4 sm:px-6 py-12 sm:py-0">
-        <div className="max-w-xl w-full">
-          <PixelCDWrapper />
-          <h1 className="text-lg sm:text-xl font-medium text-black">Memora</h1>
-          <p className="text-gray-500 text-sm mb-4 sm:mb-6">
-            Somewhere on the web
-          </p>
+					<ul className="mt-14 space-y-2.5 text-[#777775] text-sm leading-relaxed sm:text-base">
+						{features.map((feature) => (
+							<li key={feature} className="flex items-start gap-4">
+								<span
+									aria-hidden="true"
+									className="mt-[0.7em] size-1 shrink-0 bg-[#666664]"
+								/>
+								<span>{feature}</span>
+							</li>
+						))}
+						<li className="flex items-start gap-4">
+							<span
+								aria-hidden="true"
+								className="mt-[0.7em] size-1 shrink-0 bg-[#3d3d3b]"
+							/>
+							<span className="text-[#454543]">integrations — coming soon</span>
+						</li>
+					</ul>
 
-          {/* Bio paragraphs */}
-          <p className="text-stone-700 text-sm sm:text-base leading-relaxed mb-4">
-            I've always enjoyed saving things from the web links, articles,
-            small discoveries I didn't want to lose. Over time, that habit
-            quietly became a way to remember what matters.
-          </p>
-
-          <p className="text-stone-700 text-sm sm:text-base leading-relaxed">
-            Memora is a place to organize and share your bookmarks, without the
-            usual noise.
-          </p>
-
-          <LoginAnimation>
-            <LoginButtons />
-          </LoginAnimation>
-        </div>
-      </main>
-      <footer className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 text-xs sm:text-sm">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-4 h-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
-              />
-            </svg>
-            <span className="text-stone-500">
-              <span className="text-stone-300">2,847</span> bookmarks saved
-            </span>
-          </div>
-        </div>
-
-        <div className="text-stone-500 sm:text-right">
-          Last updated <span className="text-stone-300">{lastUpdated}</span>
-        </div>
-      </footer>
-    </div>
-  );
+					<footer className="mt-14 text-xs leading-relaxed sm:text-sm">
+						<p className="text-[#3f3f3d]">
+							Your corner of the web, without the noise.
+						</p>
+						<nav
+							aria-label="Project links"
+							className="mt-3 flex items-center gap-2 text-[#50504d]"
+						>
+							<a
+								href="https://github.com/juliuscaezarff/memora"
+								target="_blank"
+								rel="noreferrer"
+								className="cursor-pointer underline-offset-4 transition-colors duration-150 hover:text-[#777775] hover:underline focus-visible:text-[#777775] focus-visible:underline focus-visible:outline-none"
+							>
+								source
+							</a>
+							<span aria-hidden="true">·</span>
+							<a
+								href="https://x.com/julius___C"
+								target="_blank"
+								rel="noreferrer"
+								className="cursor-pointer underline-offset-4 transition-colors duration-150 hover:text-[#777775] hover:underline focus-visible:text-[#777775] focus-visible:underline focus-visible:outline-none"
+							>
+								@julius___C
+							</a>
+							<span aria-hidden="true">·</span>
+							<a
+								href="https://opensource.org/license/mit"
+								target="_blank"
+								rel="noreferrer"
+								className="cursor-pointer underline-offset-4 transition-colors duration-150 hover:text-[#777775] hover:underline focus-visible:text-[#777775] focus-visible:underline focus-visible:outline-none"
+							>
+								MIT
+							</a>
+						</nav>
+					</footer>
+				</section>
+			</div>
+		</main>
+	);
 }
