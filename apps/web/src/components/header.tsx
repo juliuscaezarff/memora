@@ -50,7 +50,7 @@ export function Header({
           {/* Folders Dropdown - Left */}
           {folders.length > 0 && (
             <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1.5 sm:gap-2 text-[13px] sm:text-sm text-[#ededed] hover:text-white transition-colors outline-none">
+            <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md text-[13px] text-[#ededed] outline-none transition-colors hover:text-white sm:gap-2 sm:text-sm">
               {currentFolder ? (
                 <>
                   <span className="text-base">{currentFolder.icon}</span>
@@ -108,7 +108,7 @@ export function Header({
           {/* Avatar Dropdown - Right */}
           <DropdownMenu>
             <DropdownMenuTrigger className="outline-none">
-              <Avatar className="w-7 h-7 sm:w-8 sm:h-8 border border-[#262626] hover:border-[#404040] transition-colors cursor-pointer">
+              <Avatar className="h-7 w-7 cursor-pointer border border-[#262626] transition-colors hover:border-[#404040] sm:h-8 sm:w-8">
                 <AvatarImage src={session.user.image ?? undefined} />
                 <AvatarFallback className="bg-[#1a1a1a] text-[#ededed] text-xs">
                   {session.user.name

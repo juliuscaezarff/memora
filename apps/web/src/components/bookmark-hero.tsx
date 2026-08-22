@@ -358,7 +358,7 @@ export function BookmarkHero({
               <TooltipTrigger>
                 <span>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="rounded p-1.5 text-[#4a4a4a] outline-none transition-colors hover:bg-[#1a1a1a] hover:text-white">
+                    <DropdownMenuTrigger className="rounded-md p-1.5 text-[#4a4a4a] outline-none transition-colors hover:bg-[#1a1a1a] hover:text-white">
                       <Settings2 className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -366,7 +366,7 @@ export function BookmarkHero({
                       className="w-48 border-[#262626] bg-[#0a0a0a] sm:w-52"
                     >
                       {isPublicView ? (
-                        <div className="flex items-center justify-between rounded-md px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
+                        <div className="flex items-center justify-between rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
                           <div className="flex items-center gap-2">
                             <ImageIcon className="h-4 w-4 text-[#666]" />
                             <span className="text-[#ededed] text-[13px]">
@@ -380,7 +380,7 @@ export function BookmarkHero({
                           />
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between rounded-md px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
+                        <div className="flex items-center justify-between rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
                           <div className="flex items-center gap-2">
                             <Eye className="h-4 w-4 text-[#666]" />
                             <span className="text-[#ededed] text-[13px]">
@@ -394,7 +394,7 @@ export function BookmarkHero({
                           />
                         </div>
                       )}
-                      <div className="flex items-center justify-between rounded-md px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
+                      <div className="flex items-center justify-between rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-[#666]" />
                           <span className="text-[#ededed] text-[13px]">
@@ -412,7 +412,7 @@ export function BookmarkHero({
                           type="button"
                           onClick={handleDeleteFolder}
                           disabled={deleteFolder.isPending}
-                          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                          className="flex w-full items-center gap-2 rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
                         >
                           <Trash2 className="h-4 w-4" />
                           <span className="text-[13px]">
@@ -442,7 +442,7 @@ export function BookmarkHero({
             <TooltipTrigger>
               <span>
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="rounded p-1.5 text-[#4a4a4a] outline-none transition-colors hover:bg-[#1a1a1a] hover:text-white">
+                  <DropdownMenuTrigger className="rounded-md p-1.5 text-[#4a4a4a] outline-none transition-colors hover:bg-[#1a1a1a] hover:text-white">
                     <Share2 className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -480,7 +480,7 @@ export function BookmarkHero({
                           <button
                             type="button"
                             onClick={handleCopyLink}
-                            className={`mt-1 flex w-full items-center gap-2 rounded-md border bg-[#111] px-2.5 py-2 transition-all duration-200 ${
+                            className={`mt-1 flex w-full items-center gap-2 rounded-[calc(var(--radius-md)-0.25rem)] border bg-[#111] px-2.5 py-2 transition-all duration-200 ${
                               copied
                                 ? "border-emerald-500"
                                 : "border-[#262626] hover:border-[#404040]"
