@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, Plus, Settings, User } from "lucide-react";
+import { ChevronDown, Plus, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,35 +9,48 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CreateFolderDialog } from "@/components/create-folder-dialog";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { orpc, queryClient } from "@/utils/orpc";
 import { useFolderStore } from "@/stores/folder-store";
+import { cn } from "@/lib/utils";
+
+type HeaderFolder = {
+  id: string;
+  name: string;
+  icon: string;
+  _count: { bookmarks: number };
+};
 
 export function Header({
   session,
+  folders,
+  onCreateFolder,
 }: {
   session: typeof authClient.$Infer.Session;
+  folders: HeaderFolder[];
+  onCreateFolder: () => void;
 }) {
-  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const router = useRouter();
   const { selectedFolderId, setSelectedFolderId } = useFolderStore();
-
-  const { data: folders = [] } = useQuery(orpc.folder.getAll.queryOptions());
 
   const currentFolder = selectedFolderId
     ? folders.find((f) => f.id === selectedFolderId)
     : (folders[0] ?? null);
 
   return (
-    <>
-      <header className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-sm">
-        <div className="w-full px-4 sm:px-6 h-12 sm:h-14 flex items-center justify-between">
+    <header className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-sm">
+      <div
+        className={cn(
+          "flex h-12 w-full items-center px-4 sm:h-14 sm:px-6",
+          folders.length > 0 ? "justify-between" : "justify-end",
+        )}
+      >
           {/* Folders Dropdown - Left */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1.5 sm:gap-2 text-[13px] sm:text-sm text-[#ededed] hover:text-white transition-colors outline-none">
+          {folders.length > 0 && (
+            <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md text-[13px] text-[#ededed] outline-none transition-colors hover:text-white sm:gap-2 sm:text-sm">
               {currentFolder ? (
                 <>
                   <span className="text-base">{currentFolder.icon}</span>
@@ -56,16 +67,7 @@ export function Header({
               align="start"
               className="w-52 sm:w-56 bg-[#0a0a0a] border-[#262626] text-[#ededed]"
             >
-              {folders.length === 0 ? (
-                <DropdownMenuItem
-                  className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
-                  onClick={() => setIsCreateFolderOpen(true)}
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Create your first folder</span>
-                </DropdownMenuItem>
-              ) : (
-                <>
+              <>
                   {folders.map((folder) => (
                     <DropdownMenuItem
                       key={folder.id}
@@ -93,20 +95,20 @@ export function Header({
                   <DropdownMenuSeparator className="bg-[#262626]" />
                   <DropdownMenuItem
                     className="flex items-center gap-2 mt-1 cursor-pointer text-[#666] focus:bg-[#1a1a1a] focus:text-white"
-                    onClick={() => setIsCreateFolderOpen(true)}
+                    onClick={onCreateFolder}
                   >
                     <Plus className="w-4 h-4" />
                     <span>New folder</span>
                   </DropdownMenuItem>
-                </>
-              )}
+              </>
             </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenu>
+          )}
 
           {/* Avatar Dropdown - Right */}
           <DropdownMenu>
             <DropdownMenuTrigger className="outline-none">
-              <Avatar className="w-7 h-7 sm:w-8 sm:h-8 border border-[#262626] hover:border-[#404040] transition-colors cursor-pointer">
+              <Avatar className="h-7 w-7 cursor-pointer border border-[#262626] transition-colors hover:border-[#404040] sm:h-8 sm:w-8">
                 <AvatarImage src={session.user.image ?? undefined} />
                 <AvatarFallback className="bg-[#1a1a1a] text-[#ededed] text-xs">
                   {session.user.name
@@ -146,13 +148,7 @@ export function Header({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </header>
-
-      <CreateFolderDialog
-        open={isCreateFolderOpen}
-        onOpenChange={setIsCreateFolderOpen}
-      />
-    </>
+      </div>
+    </header>
   );
 }

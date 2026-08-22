@@ -135,11 +135,11 @@ export function CreateFolderDialog({
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-fit p-0 bg-[#0a0a0a] border-[#262626]"
+                className="w-fit overflow-hidden rounded-md border-[#262626] bg-[#0a0a0a] p-0"
                 align="start"
               >
                 <EmojiPicker
-                  className="h-[320px] bg-[#0a0a0a] rounded-sm"
+                  className="h-[320px] rounded-md bg-[#0a0a0a]"
                   onEmojiSelect={({ emoji }) => {
                     setIcon(emoji);
                     setEmojiPickerOpen(false);

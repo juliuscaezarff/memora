@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LinkPreviewDrawer } from "./link-preview-drawer";
 import { orpc, queryClient } from "@/utils/orpc";
+import { cn } from "@/lib/utils";
 
 type Bookmark = {
   id: string;
@@ -43,12 +44,14 @@ interface BookmarkActionsProps {
   bookmark: Bookmark;
   currentFolderId: string;
   folders: Array<{ id: string; name: string; icon: string }>;
+  alwaysVisible?: boolean;
 }
 
 export function BookmarkActions({
   bookmark,
   currentFolderId,
   folders,
+  alwaysVisible = false,
 }: BookmarkActionsProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -150,8 +153,15 @@ export function BookmarkActions({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="p-1.5 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-[#1a1a1a] rounded transition-all outline-none">
-        <MoreHorizontal className="w-4 h-4 text-[#666]" />
+      <DropdownMenuTrigger
+        aria-label="Bookmark actions"
+        className={cn(
+          "shrink-0 rounded p-1.5 text-[#666] outline-none transition-colors duration-100 hover:text-white focus-visible:text-white",
+          !alwaysVisible &&
+            "hover:bg-[#1a1a1a] focus-visible:bg-[#1a1a1a] sm:opacity-0 sm:group-hover:opacity-100",
+        )}
+      >
+        <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"

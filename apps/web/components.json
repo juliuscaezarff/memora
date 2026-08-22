@@ -20,5 +20,7 @@
   },
   "menuColor": "default",
   "menuAccent": "subtle",
-  "registries": {}
+  "registries": {
+    "@unlumen-ui": "https://ui.unlumen.com/r/{name}.json"
+  }
 }
