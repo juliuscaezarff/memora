@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, LoaderCircle, Sparkles } from "lucide-react";
+import { Check, LoaderCircle, Pencil } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ export function ProfileSection() {
 					size="sm"
 					variant="outline"
 				>
-					<Sparkles className="mr-1.5 size-3.5" strokeWidth={1.5} />
+					<Pencil className="mr-1.5 size-3.5" strokeWidth={1.5} />
 					Change avatar
 				</Button>
 			</div>
