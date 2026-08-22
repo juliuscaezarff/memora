@@ -9,6 +9,7 @@ model Bookmark {
     title       String
     folder      Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
     folderId    String
+    labels      Label[]
 
     @@index([folderId, createdAt(sort: Desc)])
     @@index([folderId, url])
