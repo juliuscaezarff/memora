@@ -337,7 +337,7 @@ export function BookmarkHero({
         {isFolderLoading ? (
           <div className="h-9 w-9 animate-pulse rounded bg-[#1a1a1a] sm:h-10 sm:w-10" />
         ) : (
-          <span className="text-3xl sm:text-4xl">
+          <span className="-ms-1.5 block w-fit text-3xl sm:text-4xl">
             {selectedFolderIcon ?? "📁"}
           </span>
         )}
