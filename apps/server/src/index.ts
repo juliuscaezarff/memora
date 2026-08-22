@@ -1,7 +1,6 @@
 import { createContext } from "@memora/api/context";
 import { appRouter } from "@memora/api/routers/index";
 import { auth } from "@memora/auth";
-import { env } from "@memora/env/server";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
@@ -17,7 +16,7 @@ app.use(logger());
 app.use(
   "/*",
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: process.env.CORS_ORIGIN ?? "http://localhost:3001",
     allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,

@@ -7,21 +7,12 @@ export const bookmarkRouter = {
   getByFolder: protectedProcedure
     .input(z.object({ folderId: z.string() }))
     .handler(async ({ input, context }) => {
-      // Verify the folder belongs to the user
-      const folder = await prisma.folder.findFirst({
-        where: {
-          id: input.folderId,
-          userId: context.session.user.id,
-        },
-      });
-
-      if (!folder) {
-        throw new Error("Folder not found");
-      }
-
       return await prisma.bookmark.findMany({
         where: {
           folderId: input.folderId,
+          folder: {
+            userId: context.session.user.id,
+          },
         },
         orderBy: {
           createdAt: "desc",
@@ -75,6 +66,33 @@ export const bookmarkRouter = {
           ogImageUrl: input.ogImageUrl ?? null,
           description: input.description ?? null,
           folderId: input.folderId,
+        },
+      });
+    }),
+
+  updateMetadata: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        title: z.string().min(1),
+        faviconUrl: z.string().nullable(),
+        ogImageUrl: z.string().nullable(),
+        description: z.string().nullable(),
+      }),
+    )
+    .handler(async ({ input, context }) => {
+      return await prisma.bookmark.update({
+        where: {
+          id: input.id,
+          folder: {
+            userId: context.session.user.id,
+          },
+        },
+        data: {
+          title: input.title,
+          faviconUrl: input.faviconUrl,
+          ogImageUrl: input.ogImageUrl,
+          description: input.description,
         },
       });
     }),

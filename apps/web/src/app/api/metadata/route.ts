@@ -28,16 +28,21 @@ function extractDomain(url: string): string {
   }
 }
 
-async function fetchWithTimeout(url: string, timeout = 10000): Promise<Response> {
+async function fetchWithTimeout(
+  url: string,
+  timeout = 10000,
+): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(url, {
       signal: controller.signal,
+      next: { revalidate: 24 * 60 * 60 },
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; MemoraBot/1.0)",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
     });
     return response;
@@ -49,25 +54,37 @@ async function fetchWithTimeout(url: string, timeout = 10000): Promise<Response>
 function getMetaContent(html: string, property: string): string | null {
   // Try property attribute (Open Graph)
   const propertyMatch = html.match(
-    new RegExp(`<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']+)["']`, "i")
+    new RegExp(
+      `<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']+)["']`,
+      "i",
+    ),
   );
   if (propertyMatch) return propertyMatch[1];
 
   // Try reverse order (content before property)
   const reversePropertyMatch = html.match(
-    new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${property}["']`, "i")
+    new RegExp(
+      `<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${property}["']`,
+      "i",
+    ),
   );
   if (reversePropertyMatch) return reversePropertyMatch[1];
 
   // Try name attribute (standard meta)
   const nameMatch = html.match(
-    new RegExp(`<meta[^>]+name=["']${property}["'][^>]+content=["']([^"']+)["']`, "i")
+    new RegExp(
+      `<meta[^>]+name=["']${property}["'][^>]+content=["']([^"']+)["']`,
+      "i",
+    ),
   );
   if (nameMatch) return nameMatch[1];
 
   // Try reverse order for name
   const reverseNameMatch = html.match(
-    new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${property}["']`, "i")
+    new RegExp(
+      `<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${property}["']`,
+      "i",
+    ),
   );
   if (reverseNameMatch) return reverseNameMatch[1];
 
@@ -159,7 +176,7 @@ export async function GET(request: NextRequest) {
   if (!inputUrl) {
     return NextResponse.json(
       { error: "URL parameter is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -170,10 +187,7 @@ export async function GET(request: NextRequest) {
     try {
       new URL(url);
     } catch {
-      return NextResponse.json(
-        { error: "Invalid URL" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
 
     const response = await fetchWithTimeout(url);
@@ -221,7 +235,7 @@ export async function GET(request: NextRequest) {
     } catch {
       return NextResponse.json(
         { error: "Failed to fetch metadata" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }

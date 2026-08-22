@@ -11,6 +11,7 @@ model Bookmark {
     folderId    String
 
     @@index([folderId, createdAt(sort: Desc)])
+    @@index([folderId, url])
     @@index([title])
     @@index([url])
 }
