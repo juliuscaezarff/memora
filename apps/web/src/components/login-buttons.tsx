@@ -4,40 +4,28 @@ import { GithubIcon, Loader2, Terminal } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { authClient } from "@/lib/auth-client";
 
 export function LoginButtons() {
-	const lastMethod = authClient.getLastUsedLoginMethod();
 	const [loadingProvider, setLoadingProvider] = useState<
 		"google" | "github" | "dev" | null
 	>(null);
 
 	const signInWithGoogle = () => {
 		setLoadingProvider("google");
-		authClient.signIn.social({
-			provider: "google",
-			callbackURL: "/bookmarks",
-		});
+		authClient.signIn.social({ provider: "google", callbackURL: "/bookmarks" });
 	};
 
 	const signInWithGithub = () => {
 		setLoadingProvider("github");
-		authClient.signIn.social({
-			provider: "github",
-			callbackURL: "/bookmarks",
-		});
+		authClient.signIn.social({ provider: "github", callbackURL: "/bookmarks" });
 	};
 
 	const signInAsDev = async () => {
 		setLoadingProvider("dev");
-
 		try {
 			const response = await fetch("/api/dev-login", { method: "POST" });
-			if (!response.ok) {
-				throw new Error("Dev login failed");
-			}
-
+			if (!response.ok) throw new Error("Dev login failed");
 			window.location.assign("/bookmarks");
 		} catch {
 			setLoadingProvider(null);
@@ -45,75 +33,81 @@ export function LoginButtons() {
 		}
 	};
 
-	return (
-		<div className="flex w-full flex-col items-center gap-4">
-			<div className="grid w-full max-w-[304px] grid-cols-2 items-center gap-3 sm:gap-4">
-				<div className="relative">
-					<button
-						type="button"
-						onClick={signInWithGoogle}
-						disabled={loadingProvider !== null}
-						className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-black font-normal text-sm text-white no-underline transition-opacity hover:opacity-80 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
-					>
-						{loadingProvider === "google" ? (
-							<Loader2 className="h-4 w-4 animate-spin" />
-						) : (
-							<div className="flex items-center gap-2">
-								<p>Sign in with</p>
-								<Image
-									src="/google.ico"
-									alt="Google logo"
-									width={18}
-									height={18}
-								/>
-							</div>
-						)}
-					</button>
-					{lastMethod === "google" && (
-						<Badge className="absolute -top-2 -right-2 h-4 px-1.5 py-0 text-[10px]">
-							Last used
-						</Badge>
-					)}
-				</div>
-				<div className="relative">
-					<button
-						type="button"
-						onClick={signInWithGithub}
-						disabled={loadingProvider !== null}
-						className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-black font-normal text-sm text-white no-underline transition-opacity hover:opacity-80 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
-					>
-						{loadingProvider === "github" ? (
-							<Loader2 className="h-4 w-4 animate-spin" />
-						) : (
-							<div className="flex items-center gap-2">
-								<p>Sign in with</p>
-								<GithubIcon className="h-5 w-5" />
-							</div>
-						)}
-					</button>
-					{lastMethod === "github" && (
-						<Badge className="absolute -top-2 -right-2 h-4 rounded-md border border-stone-600 bg-black px-1.5 py-0 text-[10px] text-white">
-							Last used
-						</Badge>
-					)}
-				</div>
-			</div>
+	const buttonClass =
+		"inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm font-semibold text-[#e8e8e5] transition-[color,opacity,scale] duration-150 hover:text-white active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 sm:text-base";
 
-			{process.env.NODE_ENV === "development" && (
+	return (
+		<div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
+			<span aria-hidden="true" className="text-[#4a4a48] text-base">
+				›
+			</span>
+			<span className="text-[#777775] text-sm sm:text-base">continue with</span>
+			<span className="flex items-center gap-4">
 				<button
 					type="button"
-					onClick={signInAsDev}
+					onClick={signInWithGoogle}
 					disabled={loadingProvider !== null}
-					className="flex min-h-9 w-full max-w-[304px] items-center justify-center gap-2 rounded-lg border border-stone-300 bg-stone-100 px-4 font-medium text-sm text-stone-700 transition-colors duration-150 hover:border-stone-400 hover:bg-stone-200 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
+					className={buttonClass}
 				>
-					{loadingProvider === "dev" ? (
-						<Loader2 className="h-4 w-4 animate-spin" />
+					{loadingProvider === "google" ? (
+						<Loader2
+							aria-label="Signing in with Google"
+							className="size-4 animate-spin"
+						/>
 					) : (
-						<Terminal className="h-4 w-4 stroke-[1.5]" />
+						<>
+							<Image src="/google.ico" alt="" width={16} height={16} />
+							Google
+						</>
 					)}
-					Entrar como Dev
 				</button>
-			)}
+				<span aria-hidden="true" className="text-[#333331]">
+					/
+				</span>
+				<button
+					type="button"
+					onClick={signInWithGithub}
+					disabled={loadingProvider !== null}
+					className={buttonClass}
+				>
+					{loadingProvider === "github" ? (
+						<Loader2
+							aria-label="Signing in with GitHub"
+							className="size-4 animate-spin"
+						/>
+					) : (
+						<>
+							<GithubIcon aria-hidden="true" className="size-4 stroke-[2]" />
+							GitHub
+						</>
+					)}
+				</button>
+				{process.env.NODE_ENV === "development" && (
+					<>
+						<span aria-hidden="true" className="text-[#333331]">
+							/
+						</span>
+						<button
+							type="button"
+							onClick={signInAsDev}
+							disabled={loadingProvider !== null}
+							className={buttonClass}
+						>
+							{loadingProvider === "dev" ? (
+								<Loader2
+									aria-label="Signing in as Dev"
+									className="size-4 animate-spin"
+								/>
+							) : (
+								<>
+									<Terminal aria-hidden="true" className="size-4 stroke-[2]" />
+									Dev
+								</>
+							)}
+						</button>
+					</>
+				)}
+			</span>
 		</div>
 	);
 }

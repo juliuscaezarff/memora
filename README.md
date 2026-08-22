@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="apps/web/public/brain.svg" alt="Memora favicon" width="96" height="96" />
+  <img src="apps/web/public/favicon.svg" alt="Memora logo" width="96" height="96" />
 </p>
 
 # memora
