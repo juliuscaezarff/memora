@@ -10,6 +10,7 @@ model User {
   accounts      Account[]
   folders       Folder[]
   apiKeys       ApiKey[]
+  labels        Label[]
 
   @@unique([email])
   @@map("user")
