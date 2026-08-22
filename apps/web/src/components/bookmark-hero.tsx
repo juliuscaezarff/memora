@@ -7,7 +7,6 @@ import {
 	Copy,
 	Eye,
 	Globe,
-	ImageIcon,
 	Link2,
 	Loader2,
 	Settings2,
@@ -42,8 +41,6 @@ import { useFolderStore } from "@/stores/folder-store";
 import { orpc, queryClient } from "@/utils/orpc";
 
 interface BookmarkHeroProps {
-	showImages?: boolean;
-	setShowImages?: (value: boolean) => void;
 	showPreview?: boolean;
 	setShowPreview?: (value: boolean) => void;
 	showMonths: boolean;
@@ -234,8 +231,6 @@ function FolderNameEditor({
 }
 
 export function BookmarkHero({
-	showImages,
-	setShowImages,
 	showPreview,
 	setShowPreview,
 	showMonths,
@@ -573,35 +568,19 @@ export function BookmarkHero({
 								align="start"
 								className="w-48 border-[#262626] bg-[#0a0a0a] sm:w-52"
 							>
-								{isPublicView ? (
-									<div className="flex items-center justify-between rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
-										<div className="flex items-center gap-2">
-											<ImageIcon className="h-4 w-4 text-[#666]" />
-											<span className="text-[#ededed] text-[13px]">
-												Show image
-											</span>
-										</div>
-										<Switch
-											checked={showImages}
-											onCheckedChange={setShowImages}
-											className="h-4 w-7 data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333]"
-										/>
+								<div className="flex items-center justify-between rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
+									<div className="flex items-center gap-2">
+										<Eye className="h-4 w-4 text-[#666]" />
+										<span className="text-[#ededed] text-[13px]">
+											Show preview
+										</span>
 									</div>
-								) : (
-									<div className="flex items-center justify-between rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
-										<div className="flex items-center gap-2">
-											<Eye className="h-4 w-4 text-[#666]" />
-											<span className="text-[#ededed] text-[13px]">
-												Show preview
-											</span>
-										</div>
-										<Switch
-											checked={showPreview}
-											onCheckedChange={setShowPreview}
-											className="h-4 w-7 data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333]"
-										/>
-									</div>
-								)}
+									<Switch
+										checked={showPreview}
+										onCheckedChange={setShowPreview}
+										className="h-4 w-7 data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333]"
+									/>
+								</div>
 								<div className="flex items-center justify-between rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
 									<div className="flex items-center gap-2">
 										<Calendar className="h-4 w-4 text-[#666]" />
@@ -615,19 +594,23 @@ export function BookmarkHero({
 										className="h-4 w-7 data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333]"
 									/>
 								</div>
-								<div className="mt-1 border-[#262626] border-t pt-1">
-									<button
-										type="button"
-										onClick={handleDeleteFolder}
-										disabled={deleteFolder.isPending}
-										className="flex w-full items-center gap-2 rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
-									>
-										<Trash2 className="h-4 w-4" />
-										<span className="text-[13px]">
-											{deleteFolder.isPending ? "Deleting..." : "Delete folder"}
-										</span>
-									</button>
-								</div>
+								{!isPublicView && (
+									<div className="mt-1 border-[#262626] border-t pt-1">
+										<button
+											type="button"
+											onClick={handleDeleteFolder}
+											disabled={deleteFolder.isPending}
+											className="flex w-full items-center gap-2 rounded-[calc(var(--radius-md)-0.25rem)] px-2 py-2 text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+										>
+											<Trash2 className="h-4 w-4" />
+											<span className="text-[13px]">
+												{deleteFolder.isPending
+													? "Deleting..."
+													: "Delete folder"}
+											</span>
+										</button>
+									</div>
+								)}
 							</DropdownMenuContent>
 						</DropdownMenu>
 					)}

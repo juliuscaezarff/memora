@@ -1,327 +1,179 @@
 "use client";
 
-import { toast } from "sonner";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import {
-  Copy,
-  Share2,
-  ExternalLink,
-  MoreHorizontal,
-  Globe,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
+	BookmarkListItem,
+	type BookmarkListItemMetadata,
+} from "@/components/bookmark-list/bookmark-list";
 
 type Bookmark = {
-  id: string;
-  url: string;
-  title: string;
-  faviconUrl: string | null;
-  ogImageUrl: string | null;
-  description: string | null;
-  folderId: string;
-  createdAt: Date;
-  updatedAt: Date;
+	id: string;
+	url: string;
+	title: string;
+	faviconUrl: string | null;
+	ogImageUrl: string | null;
+	description: string | null;
+	folderId: string;
+	createdAt: Date;
+	updatedAt: Date;
 };
 
-interface PublicBookmarkListProps {
-  bookmarks: Bookmark[];
-  showImages: boolean;
-  showMonths: boolean;
+type PublicBookmarkListProps = {
+	bookmarks: Bookmark[];
+	showPreview: boolean;
+	showMonths: boolean;
+	isLoading?: boolean;
+};
+
+const BOOKMARK_SKELETONS = [
+	"public-bookmark-skeleton-1",
+	"public-bookmark-skeleton-2",
+	"public-bookmark-skeleton-3",
+	"public-bookmark-skeleton-4",
+	"public-bookmark-skeleton-5",
+	"public-bookmark-skeleton-6",
+] as const;
+
+function formatMonth(date: Date) {
+	return new Intl.DateTimeFormat("en-US", {
+		month: "long",
+		year: "numeric",
+	}).format(new Date(date));
 }
 
-function formatMonth(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    year: "numeric",
-  }).format(new Date(date));
+function getDomain(url: string) {
+	try {
+		return new URL(url).hostname.replace(/^www\./, "");
+	} catch {
+		return url;
+	}
 }
 
-function extractDisplayUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    return parsed.hostname.replace("www.", "");
-  } catch {
-    return url;
-  }
+function getBookmarkMetadata(bookmark: Bookmark): BookmarkListItemMetadata {
+	const domain = getDomain(bookmark.url);
+
+	return {
+		url: bookmark.url,
+		title: bookmark.title,
+		description: bookmark.description ?? undefined,
+		siteName: domain.split(".")[0] || domain,
+		domain,
+		image: bookmark.ogImageUrl ?? undefined,
+		favicon: bookmark.faviconUrl ?? undefined,
+	};
+}
+
+function moveRowHighlight(event: ReactPointerEvent<HTMLDivElement>) {
+	if (!(event.target instanceof Element)) return;
+
+	const row = event.target.closest<HTMLElement>("[data-bookmark-row]");
+	if (!row || row.parentElement !== event.currentTarget) return;
+
+	const container = event.currentTarget;
+	const highlight = container.querySelector<HTMLElement>(
+		"[data-bookmark-highlight]",
+	);
+	if (!highlight) return;
+
+	if (
+		highlight.style.opacity === "1" &&
+		container.dataset.highlightedRow === row.dataset.bookmarkRow
+	) {
+		return;
+	}
+
+	container.dataset.highlightedRow = row.dataset.bookmarkRow;
+	highlight.style.height = `${row.offsetHeight}px`;
+	highlight.style.transform = `translate3d(0, ${row.offsetTop}px, 0)`;
+	highlight.style.opacity = "1";
+}
+
+function hideRowHighlight(event: ReactPointerEvent<HTMLDivElement>) {
+	const highlight = event.currentTarget.querySelector<HTMLElement>(
+		"[data-bookmark-highlight]",
+	);
+	if (highlight) highlight.style.opacity = "0";
 }
 
 export function PublicBookmarkList({
-  bookmarks,
-  showImages,
-  showMonths,
+	bookmarks,
+	showPreview,
+	showMonths,
+	isLoading = false,
 }: PublicBookmarkListProps) {
-  const handleCopyUrl = (url: string) => {
-    navigator.clipboard.writeText(url);
-    toast.success("URL copied to clipboard");
-  };
+	if (isLoading) {
+		return (
+			<output className="block space-y-3" aria-label="Loading bookmarks">
+				{BOOKMARK_SKELETONS.map((skeleton) => (
+					<div
+						key={skeleton}
+						className="h-7 w-2/3 animate-pulse rounded bg-[#111]"
+					/>
+				))}
+			</output>
+		);
+	}
 
-  const handleOpenLink = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+	if (bookmarks.length === 0) {
+		return (
+			<div className="py-12 text-center text-[#4a4a4a]">
+				<p>No bookmarks in this folder yet.</p>
+			</div>
+		);
+	}
 
-  const handleShare = async (url: string, title: string) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, url });
-      } catch {
-        // User cancelled or share failed
-      }
-    } else {
-      handleCopyUrl(url);
-    }
-  };
+	const groupedBookmarks = showMonths
+		? bookmarks.reduce(
+				(groups, bookmark) => {
+					const month = formatMonth(bookmark.createdAt);
+					if (!groups[month]) groups[month] = [];
+					groups[month].push(bookmark);
+					return groups;
+				},
+				{} as Record<string, Bookmark[]>,
+			)
+		: { all: bookmarks };
 
-  if (bookmarks.length === 0) {
-    return (
-      <div className="text-center py-12 text-[#4a4a4a]">
-        <p>No bookmarks in this folder yet.</p>
-      </div>
-    );
-  }
+	return (
+		<div className="space-y-6">
+			{Object.entries(groupedBookmarks).map(([month, items]) => (
+				<section key={month}>
+					{showMonths && month !== "all" && (
+						<h2 className="mb-3 font-medium text-[#4a4a4a] text-[10px] uppercase tracking-wider sm:text-[11px]">
+							{month}
+						</h2>
+					)}
 
-  const groupedBookmarks = showMonths
-    ? bookmarks.reduce(
-        (acc, bookmark) => {
-          const month = formatMonth(bookmark.createdAt);
-          if (!acc[month]) acc[month] = [];
-          acc[month].push(bookmark);
-          return acc;
-        },
-        {} as Record<string, Bookmark[]>,
-      )
-    : { all: bookmarks };
-
-  return (
-    <div className="space-y-6">
-      {Object.entries(groupedBookmarks).map(([month, items]) => (
-        <div key={month}>
-          {showMonths && month !== "all" && (
-            <div className="text-[10px] sm:text-[11px] font-medium text-[#4a4a4a] uppercase tracking-wider mb-3">
-              {month}
-            </div>
-          )}
-
-          <div className="space-y-0">
-            {items.map((bookmark, index) => (
-              <div
-                key={bookmark.id}
-                className={`group flex items-center justify-between py-2.5 sm:py-3 gap-2 sm:gap-3 ${
-                  index !== items.length - 1 ? "border-b border-[#1a1a1a]" : ""
-                }`}
-              >
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                  {/* Favicon */}
-                  <span className="text-sm text-[#666] w-4 sm:w-5 flex justify-center flex-shrink-0">
-                    {bookmark.faviconUrl ? (
-                      <img
-                        src={bookmark.faviconUrl}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className="w-4 h-4 rounded-sm"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          e.currentTarget.nextElementSibling?.classList.remove(
-                            "hidden",
-                          );
-                        }}
-                      />
-                    ) : null}
-                    <Globe
-                      size={14}
-                      className={bookmark.faviconUrl ? "hidden" : ""}
-                    />
-                  </span>
-
-                  {/* OG Image */}
-                  {showImages && (
-                    <div className="w-[60px] h-[34px] sm:w-[100px] sm:h-[56px] rounded overflow-hidden bg-[#111] flex-shrink-0">
-                      {bookmark.ogImageUrl ? (
-                        <img
-                          src={bookmark.ogImageUrl}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = "";
-                            e.currentTarget.classList.add("hidden");
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Globe size={20} className="text-[#333]" />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Title and URL */}
-                  <div
-                    className={`min-w-0 ${showImages ? "flex flex-col gap-0.5" : "flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3"}`}
-                  >
-                    <a
-                      href={bookmark.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[13px] sm:text-[15px] font-medium text-[#ededed] truncate hover:text-[#6366f1]"
-                    >
-                      {bookmark.title}
-                    </a>
-                    {showImages && (
-                      <a
-                        href={bookmark.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] sm:text-[12px] text-[#4a4a4a] truncate hover:text-[#6366f1]"
-                      >
-                        {extractDisplayUrl(bookmark.url)}
-                      </a>
-                    )}
-
-                    {!showImages && (
-                      <a
-                        href={bookmark.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] sm:text-[13px] text-[#4a4a4a] truncate sm:hidden hover:text-[#6366f1]"
-                      >
-                        {extractDisplayUrl(bookmark.url)}
-                      </a>
-                    )}
-
-                    {!showImages && (
-                      <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
-                              onClick={() => handleCopyUrl(bookmark.url)}
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom">
-                            Copy link
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
-                              onClick={() =>
-                                handleShare(bookmark.url, bookmark.title)
-                              }
-                            >
-                              <Share2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom">Share</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right side - URL and actions */}
-                <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-                  {!showImages && (
-                    <a
-                      href={bookmark.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hidden sm:block text-[13px] text-[#4a4a4a] hover:text-[#6366f1]"
-                    >
-                      {extractDisplayUrl(bookmark.url)}
-                    </a>
-                  )}
-
-                  {showImages && (
-                    <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
-                            onClick={() => handleCopyUrl(bookmark.url)}
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">Copy link</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-[#666] hover:text-[#ededed] hover:bg-[#1a1a1a]"
-                            onClick={() =>
-                              handleShare(bookmark.url, bookmark.title)
-                            }
-                          >
-                            <Share2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">Share</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  )}
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="p-1.5 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-[#1a1a1a] rounded transition-all outline-none">
-                      <MoreHorizontal className="w-4 h-4 text-[#666]" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-36 sm:w-40 bg-[#0a0a0a] border-[#262626] text-[#ededed]"
-                    >
-                      <DropdownMenuItem
-                        className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
-                        onClick={() => handleOpenLink(bookmark.url)}
-                      >
-                        <ExternalLink className="w-4 h-4 text-[#666]" />
-                        <span className="text-[13px]">Open link</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
-                        onClick={() => handleCopyUrl(bookmark.url)}
-                      >
-                        <Copy className="w-4 h-4 text-[#666]" />
-                        <span className="text-[13px]">Copy URL</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="flex items-center gap-2 cursor-pointer focus:bg-[#1a1a1a] focus:text-white"
-                        onClick={() =>
-                          handleShare(bookmark.url, bookmark.title)
-                        }
-                      >
-                        <Share2 className="w-4 h-4 text-[#666]" />
-                        <span className="text-[13px]">Share</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+					<div
+						className="relative flex flex-col items-stretch gap-2"
+						onPointerOver={moveRowHighlight}
+						onPointerLeave={hideRowHighlight}
+					>
+						<span
+							aria-hidden="true"
+							data-bookmark-highlight
+							className="pointer-events-none absolute inset-x-0 top-0 z-0 rounded-[5px] bg-[#111] opacity-0"
+						/>
+						{items.map((bookmark) => (
+							<div
+								key={bookmark.id}
+								data-bookmark-row={bookmark.id}
+								className="relative z-10 flex items-center rounded-[5px] has-[:focus-visible]:bg-[#111] has-[[data-state=open]]:bg-[#111]"
+							>
+								<BookmarkListItem
+									url={bookmark.url}
+									metadata={getBookmarkMetadata(bookmark)}
+									prefetch="hover"
+									showPreview={showPreview}
+									variant="row"
+									className="dark min-w-0 flex-1"
+									previewClassName="dark"
+								/>
+							</div>
+						))}
+					</div>
+				</section>
+			))}
+		</div>
+	);
 }
