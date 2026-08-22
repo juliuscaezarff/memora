@@ -1,6 +1,10 @@
+import type { auth } from "@memora/auth";
 import { createAuthClient } from "better-auth/react";
-import { lastLoginMethodClient } from "better-auth/client/plugins";
+import {
+  inferAdditionalFields,
+  lastLoginMethodClient,
+} from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-  plugins: [lastLoginMethodClient()],
+  plugins: [lastLoginMethodClient(), inferAdditionalFields<typeof auth>()],
 });

@@ -29,6 +29,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "catalog:",
+    "facehash": "^0.1.0",
     "frimousse": "^0.3.0",
     "hono": "catalog:",
     "lucide-react": "^0.562.0",
