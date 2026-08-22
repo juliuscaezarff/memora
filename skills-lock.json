@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "better-colors": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-colors/SKILL.md",
+      "computedHash": "290e10e73c835cd21d016b60e16a6bb0562040903b9e56d15ad25ebb5e9cc762"
+    },
     "better-layout": {
       "source": "jakubkrehel/skills",
       "sourceType": "github",

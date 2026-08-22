@@ -4,159 +4,166 @@ import z from "zod";
 import { protectedProcedure } from "../index";
 
 export const bookmarkRouter = {
-  getByFolder: protectedProcedure
-    .input(z.object({ folderId: z.string() }))
-    .handler(async ({ input, context }) => {
-      return await prisma.bookmark.findMany({
-        where: {
-          folderId: input.folderId,
-          folder: {
-            userId: context.session.user.id,
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-    }),
+	getByFolder: protectedProcedure
+		.input(z.object({ folderId: z.string() }))
+		.handler(async ({ input, context }) => {
+			return await prisma.bookmark.findMany({
+				where: {
+					folderId: input.folderId,
+					folder: {
+						userId: context.session.user.id,
+					},
+				},
+				orderBy: {
+					createdAt: "desc",
+				},
+				include: {
+					labels: {
+						orderBy: { createdAt: "asc" },
+					},
+				},
+			});
+		}),
 
-  create: protectedProcedure
-    .input(
-      z.object({
-        url: z.string().url(),
-        title: z.string().min(1),
-        faviconUrl: z.string().nullable().optional(),
-        ogImageUrl: z.string().nullable().optional(),
-        description: z.string().nullable().optional(),
-        folderId: z.string(),
-      }),
-    )
-    .handler(async ({ input, context }) => {
-      // Verify the folder belongs to the user
-      const folder = await prisma.folder.findFirst({
-        where: {
-          id: input.folderId,
-          userId: context.session.user.id,
-        },
-      });
+	create: protectedProcedure
+		.input(
+			z.object({
+				url: z.string().url(),
+				title: z.string().min(1),
+				faviconUrl: z.string().nullable().optional(),
+				ogImageUrl: z.string().nullable().optional(),
+				description: z.string().nullable().optional(),
+				folderId: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			// Verify the folder belongs to the user
+			const folder = await prisma.folder.findFirst({
+				where: {
+					id: input.folderId,
+					userId: context.session.user.id,
+				},
+			});
 
-      if (!folder) {
-        throw new Error("Folder not found");
-      }
+			if (!folder) {
+				throw new Error("Folder not found");
+			}
 
-      // Check for duplicates if folder doesn't allow them
-      if (!folder.allowDuplicate) {
-        const existing = await prisma.bookmark.findFirst({
-          where: {
-            folderId: input.folderId,
-            url: input.url,
-          },
-        });
+			// Check for duplicates if folder doesn't allow them
+			if (!folder.allowDuplicate) {
+				const existing = await prisma.bookmark.findFirst({
+					where: {
+						folderId: input.folderId,
+						url: input.url,
+					},
+				});
 
-        if (existing) {
-          throw new Error("Bookmark already exists in this folder");
-        }
-      }
+				if (existing) {
+					throw new Error("Bookmark already exists in this folder");
+				}
+			}
 
-      return await prisma.bookmark.create({
-        data: {
-          url: input.url,
-          title: input.title,
-          faviconUrl: input.faviconUrl ?? null,
-          ogImageUrl: input.ogImageUrl ?? null,
-          description: input.description ?? null,
-          folderId: input.folderId,
-        },
-      });
-    }),
+			return await prisma.bookmark.create({
+				data: {
+					url: input.url,
+					title: input.title,
+					faviconUrl: input.faviconUrl ?? null,
+					ogImageUrl: input.ogImageUrl ?? null,
+					description: input.description ?? null,
+					folderId: input.folderId,
+				},
+				include: { labels: true },
+			});
+		}),
 
-  updateMetadata: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        title: z.string().min(1),
-        faviconUrl: z.string().nullable(),
-        ogImageUrl: z.string().nullable(),
-        description: z.string().nullable(),
-      }),
-    )
-    .handler(async ({ input, context }) => {
-      return await prisma.bookmark.update({
-        where: {
-          id: input.id,
-          folder: {
-            userId: context.session.user.id,
-          },
-        },
-        data: {
-          title: input.title,
-          faviconUrl: input.faviconUrl,
-          ogImageUrl: input.ogImageUrl,
-          description: input.description,
-        },
-      });
-    }),
+	updateMetadata: protectedProcedure
+		.input(
+			z.object({
+				id: z.string(),
+				title: z.string().min(1),
+				faviconUrl: z.string().nullable(),
+				ogImageUrl: z.string().nullable(),
+				description: z.string().nullable(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			return await prisma.bookmark.update({
+				where: {
+					id: input.id,
+					folder: {
+						userId: context.session.user.id,
+					},
+				},
+				data: {
+					title: input.title,
+					faviconUrl: input.faviconUrl,
+					ogImageUrl: input.ogImageUrl,
+					description: input.description,
+				},
+				include: { labels: true },
+			});
+		}),
 
-  delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .handler(async ({ input, context }) => {
-      // Verify the bookmark belongs to a folder owned by the user
-      const bookmark = await prisma.bookmark.findFirst({
-        where: {
-          id: input.id,
-        },
-        include: {
-          folder: true,
-        },
-      });
+	delete: protectedProcedure
+		.input(z.object({ id: z.string() }))
+		.handler(async ({ input, context }) => {
+			// Verify the bookmark belongs to a folder owned by the user
+			const bookmark = await prisma.bookmark.findFirst({
+				where: {
+					id: input.id,
+				},
+				include: {
+					folder: true,
+				},
+			});
 
-      if (!bookmark || bookmark.folder.userId !== context.session.user.id) {
-        throw new Error("Bookmark not found");
-      }
+			if (!bookmark || bookmark.folder.userId !== context.session.user.id) {
+				throw new Error("Bookmark not found");
+			}
 
-      return await prisma.bookmark.delete({
-        where: {
-          id: input.id,
-        },
-      });
-    }),
+			return await prisma.bookmark.delete({
+				where: {
+					id: input.id,
+				},
+			});
+		}),
 
-  move: protectedProcedure
-    .input(z.object({ id: z.string(), targetFolderId: z.string() }))
-    .handler(async ({ input, context }) => {
-      // Verify the bookmark belongs to a folder owned by the user
-      const bookmark = await prisma.bookmark.findFirst({
-        where: {
-          id: input.id,
-        },
-        include: {
-          folder: true,
-        },
-      });
+	move: protectedProcedure
+		.input(z.object({ id: z.string(), targetFolderId: z.string() }))
+		.handler(async ({ input, context }) => {
+			// Verify the bookmark belongs to a folder owned by the user
+			const bookmark = await prisma.bookmark.findFirst({
+				where: {
+					id: input.id,
+				},
+				include: {
+					folder: true,
+				},
+			});
 
-      if (!bookmark || bookmark.folder.userId !== context.session.user.id) {
-        throw new Error("Bookmark not found");
-      }
+			if (!bookmark || bookmark.folder.userId !== context.session.user.id) {
+				throw new Error("Bookmark not found");
+			}
 
-      // Verify the target folder belongs to the user
-      const targetFolder = await prisma.folder.findFirst({
-        where: {
-          id: input.targetFolderId,
-          userId: context.session.user.id,
-        },
-      });
+			// Verify the target folder belongs to the user
+			const targetFolder = await prisma.folder.findFirst({
+				where: {
+					id: input.targetFolderId,
+					userId: context.session.user.id,
+				},
+			});
 
-      if (!targetFolder) {
-        throw new Error("Target folder not found");
-      }
+			if (!targetFolder) {
+				throw new Error("Target folder not found");
+			}
 
-      return await prisma.bookmark.update({
-        where: {
-          id: input.id,
-        },
-        data: {
-          folderId: input.targetFolderId,
-        },
-      });
-    }),
+			return await prisma.bookmark.update({
+				where: {
+					id: input.id,
+				},
+				data: {
+					folderId: input.targetFolderId,
+				},
+			});
+		}),
 };

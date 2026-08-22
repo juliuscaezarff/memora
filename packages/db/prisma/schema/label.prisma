@@ -1,0 +1,13 @@
+model Label {
+    id        String     @id @default(cuid())
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    name      String
+    color     String
+    user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId    String
+    bookmarks Bookmark[]
+
+    @@unique([userId, name])
+    @@index([userId, createdAt(sort: Asc)])
+}
