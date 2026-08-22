@@ -38,14 +38,12 @@ export function ProfileSection() {
 		setIsSaving(false);
 
 		if (error) {
-			toast.error("Não foi possível atualizar seu avatar");
+			toast.error("Could not update your avatar");
 			return;
 		}
 
 		setOpen(false);
-		toast.success(
-			nextSeed ? "Novo avatar escolhido" : "Foto original restaurada",
-		);
+		toast.success(nextSeed ? "New avatar selected" : "Original photo restored");
 	}
 
 	return (
@@ -72,7 +70,7 @@ export function ProfileSection() {
 					variant="outline"
 				>
 					<Sparkles className="mr-1.5 size-3.5" strokeWidth={1.5} />
-					Trocar avatar
+					Change avatar
 				</Button>
 			</div>
 
@@ -80,10 +78,10 @@ export function ProfileSection() {
 				<DialogContent className="gap-5 rounded-xl border border-[#262626] bg-[#0a0a0a] p-5 text-[#ededed] shadow-2xl">
 					<DialogHeader className="pe-8">
 						<DialogTitle className="text-base">
-							Escolha sua nova carinha
+							Choose your new face
 						</DialogTitle>
 						<DialogDescription className="text-[#777]">
-							Cada opção é única para sua conta e fica salva no seu perfil.
+							Each option is unique to your account and saved to your profile.
 						</DialogDescription>
 					</DialogHeader>
 
@@ -91,8 +89,8 @@ export function ProfileSection() {
 						<button
 							aria-label={
 								user.image
-									? "Usar foto original"
-									: "Usar avatar original com iniciais"
+									? "Use original photo"
+									: "Use original avatar with initials"
 							}
 							aria-pressed={!avatarSeed}
 							className={cn(
@@ -124,7 +122,7 @@ export function ProfileSection() {
 
 							return (
 								<button
-									aria-label={`Escolher avatar ${index + 1}`}
+									aria-label={`Choose avatar ${index + 1}`}
 									aria-pressed={selected}
 									className={cn(
 										"relative size-[4.25rem] rounded-xl bg-[#111] p-1.5 outline-none ring-1 ring-[#262626] transition-[background-color,box-shadow,scale] duration-100 hover:bg-[#181818] focus-visible:ring-2 focus-visible:ring-[#777] active:scale-[0.96]",
@@ -157,7 +155,7 @@ export function ProfileSection() {
 							className="flex items-center justify-center gap-2 text-[#777] text-xs"
 						>
 							<LoaderCircle className="size-3.5 animate-spin" />
-							Salvando avatar…
+							Saving avatar…
 						</p>
 					) : null}
 				</DialogContent>
