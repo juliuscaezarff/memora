@@ -13,6 +13,10 @@ import { Button } from "./ui/button";
 import { BookmarkActions } from "./bookmark-actions";
 import { LinkPreviewDrawer } from "./link-preview-drawer";
 import { orpc } from "@/utils/orpc";
+import {
+  BookmarkListItem,
+  type BookmarkListItemMetadata,
+} from "@/components/bookmark-list/bookmark-list";
 
 type Bookmark = {
   id: string;
@@ -55,7 +59,122 @@ function extractDisplayUrl(url: string): string {
   }
 }
 
-export function BookmarkList({
+const BOOKMARK_SKELETONS = [
+  "bookmark-skeleton-1",
+  "bookmark-skeleton-2",
+  "bookmark-skeleton-3",
+  "bookmark-skeleton-4",
+  "bookmark-skeleton-5",
+  "bookmark-skeleton-6",
+] as const;
+
+const BOOKMARK_LIST_VARIANT: "preview" | "legacy" = "legacy";
+
+function getPreviewMetadata(
+  bookmark: Bookmark,
+  showImage: boolean,
+): BookmarkListItemMetadata {
+  const domain = extractDisplayUrl(bookmark.url);
+
+  return {
+    url: bookmark.url,
+    title: bookmark.title,
+    description: bookmark.description ?? undefined,
+    siteName: domain.split(".")[0] || domain,
+    domain,
+    image: showImage ? (bookmark.ogImageUrl ?? undefined) : undefined,
+    favicon: bookmark.faviconUrl ?? undefined,
+  };
+}
+
+export function BookmarkList(props: BookmarkListProps) {
+  return BOOKMARK_LIST_VARIANT === "preview" ? (
+    <PreviewBookmarkList {...props} />
+  ) : (
+    <LegacyBookmarkList {...props} />
+  );
+}
+
+function PreviewBookmarkList({
+  showImages,
+  showMonths,
+  selectedFolderId,
+}: BookmarkListProps) {
+  const { data: bookmarks = [], isPending } = useQuery({
+    ...orpc.bookmark.getByFolder.queryOptions({
+      input: { folderId: selectedFolderId ?? "" },
+    }),
+    enabled: !!selectedFolderId,
+  });
+
+  if (!selectedFolderId) {
+    return (
+      <div className="py-12 text-center text-[#4a4a4a]">
+        <p>Create a folder to start saving bookmarks</p>
+      </div>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <output className="block space-y-3" aria-label="Loading bookmarks">
+        {BOOKMARK_SKELETONS.map((skeleton) => (
+          <div key={skeleton} className="h-7 w-2/3 animate-pulse rounded bg-[#111]" />
+        ))}
+      </output>
+    );
+  }
+
+  if (bookmarks.length === 0) {
+    return (
+      <div className="py-12 text-center text-[#4a4a4a]">
+        <p>No bookmarks yet. Paste a link above to save your first bookmark.</p>
+      </div>
+    );
+  }
+
+  const groupedBookmarks = showMonths
+    ? bookmarks.reduce(
+        (acc, bookmark) => {
+          const month = formatMonth(bookmark.createdAt);
+          if (!acc[month]) acc[month] = [];
+          acc[month].push(bookmark);
+          return acc;
+        },
+        {} as Record<string, Bookmark[]>,
+      )
+    : { all: bookmarks };
+
+  return (
+    <div className="space-y-6">
+      {Object.entries(groupedBookmarks).map(([month, items]) => (
+        <section key={month}>
+          {showMonths && month !== "all" && (
+            <h2 className="mb-3 font-medium text-[#4a4a4a] text-[10px] uppercase tracking-wider sm:text-[11px]">
+              {month}
+            </h2>
+          )}
+
+          <div className="flex flex-col items-start gap-2">
+            {items.map((bookmark) => (
+              <BookmarkListItem
+                key={bookmark.id}
+                url={bookmark.url}
+                metadata={getPreviewMetadata(bookmark, showImages)}
+                prefetch="hover"
+                proxyAssets={false}
+                className="dark w-fit max-w-full hover:bg-[#111] focus-visible:bg-[#111]"
+                previewClassName="dark"
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function LegacyBookmarkList({
   showImages,
   showMonths,
   selectedFolderId,
@@ -91,11 +210,11 @@ export function BookmarkList({
 
   if (isPending) {
     return (
-      <div className="space-y-3" role="status" aria-label="Loading bookmarks">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="h-10 rounded bg-[#111] animate-pulse" />
+      <output className="block space-y-3" aria-label="Loading bookmarks">
+        {BOOKMARK_SKELETONS.map((skeleton) => (
+          <div key={skeleton} className="h-10 rounded bg-[#111] animate-pulse" />
         ))}
-      </div>
+      </output>
     );
   }
 

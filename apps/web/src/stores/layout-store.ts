@@ -1,21 +1,21 @@
+import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { useEffect, useState } from "react";
 
 interface FolderLayoutSettings {
-  showImages: boolean;
+  showPreview: boolean;
   showMonths: boolean;
 }
 
 interface LayoutState {
   folderSettings: Record<string, FolderLayoutSettings>;
   getSettings: (folderId: string) => FolderLayoutSettings;
-  setShowImages: (folderId: string, value: boolean) => void;
+  setShowPreview: (folderId: string, value: boolean) => void;
   setShowMonths: (folderId: string, value: boolean) => void;
 }
 
 const defaultSettings: FolderLayoutSettings = {
-  showImages: false,
+  showPreview: true,
   showMonths: false,
 };
 
@@ -24,16 +24,19 @@ export const useLayoutStore = create<LayoutState>()(
     (set, get) => ({
       folderSettings: {},
       getSettings: (folderId) => {
-        return get().folderSettings[folderId] ?? defaultSettings;
+        return {
+          ...defaultSettings,
+          ...get().folderSettings[folderId],
+        };
       },
-      setShowImages: (folderId, value) =>
+      setShowPreview: (folderId, value) =>
         set((state) => ({
           folderSettings: {
             ...state.folderSettings,
             [folderId]: {
               ...defaultSettings,
               ...state.folderSettings[folderId],
-              showImages: value,
+              showPreview: value,
             },
           },
         })),

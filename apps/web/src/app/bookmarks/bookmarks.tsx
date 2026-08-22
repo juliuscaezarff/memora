@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { BookmarkHero } from "@/components/bookmark-hero";
 import { BookmarkList } from "@/components/bookmark-list";
 import { Header } from "@/components/header";
-import { authClient } from "@/lib/auth-client";
-import { orpc } from "@/utils/orpc";
+import type { authClient } from "@/lib/auth-client";
 import { useFolderStore, useFolderStoreHydrated } from "@/stores/folder-store";
 import { useLayoutStore, useLayoutStoreHydrated } from "@/stores/layout-store";
+import { orpc } from "@/utils/orpc";
 
 export default function Bookmarks({
   session,
@@ -19,7 +19,7 @@ export default function Bookmarks({
 }) {
   const { selectedFolderId, setSelectedFolderId } = useFolderStore();
   const folderSettings = useLayoutStore((state) => state.folderSettings);
-  const setShowImages = useLayoutStore((state) => state.setShowImages);
+  const setShowPreview = useLayoutStore((state) => state.setShowPreview);
   const setShowMonths = useLayoutStore((state) => state.setShowMonths);
 
   const folderHydrated = useFolderStoreHydrated();
@@ -66,16 +66,17 @@ export default function Bookmarks({
   const currentFolderId = selectedFolder?.id ?? null;
 
   // Get settings directly from state to ensure reactivity
-  const currentSettings = currentFolderId
-    ? (folderSettings[currentFolderId] ?? {
-        showImages: false,
-        showMonths: false,
-      })
-    : { showImages: false, showMonths: false };
+  const storedSettings = currentFolderId
+    ? folderSettings[currentFolderId]
+    : undefined;
+  const currentSettings = {
+    showPreview: storedSettings?.showPreview ?? true,
+    showMonths: storedSettings?.showMonths ?? false,
+  };
 
-  const handleSetShowImages = (value: boolean) => {
+  const handleSetShowPreview = (value: boolean) => {
     if (currentFolderId) {
-      setShowImages(currentFolderId, value);
+      setShowPreview(currentFolderId, value);
     }
   };
 
@@ -88,10 +89,10 @@ export default function Bookmarks({
   return (
     <div className="min-h-screen bg-black">
       <Header session={session} />
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
         <BookmarkHero
-          showImages={currentSettings.showImages}
-          setShowImages={handleSetShowImages}
+          showPreview={currentSettings.showPreview}
+          setShowPreview={handleSetShowPreview}
           showMonths={currentSettings.showMonths}
           setShowMonths={handleSetShowMonths}
           selectedFolderId={currentFolderId}
@@ -101,7 +102,7 @@ export default function Bookmarks({
           isLoading={isLoading}
         />
         <BookmarkList
-          showImages={currentSettings.showImages}
+          showPreview={currentSettings.showPreview}
           showMonths={currentSettings.showMonths}
           selectedFolderId={currentFolderId}
           folders={folders}

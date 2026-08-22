@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import {
-  Link2,
-  Settings2,
-  ImageIcon,
   Calendar,
-  Loader2,
-  Share2,
-  Globe,
-  Copy,
   CircleCheck,
+  Copy,
+  Eye,
+  Globe,
+  ImageIcon,
+  Link2,
+  Loader2,
+  Settings2,
+  Share2,
   Trash2,
 } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,12 +28,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { orpc, queryClient } from "@/utils/orpc";
 import { useFolderStore } from "@/stores/folder-store";
+import { orpc, queryClient } from "@/utils/orpc";
 
 interface BookmarkHeroProps {
-  showImages: boolean;
-  setShowImages: (value: boolean) => void;
+  showImages?: boolean;
+  setShowImages?: (value: boolean) => void;
+  showPreview?: boolean;
+  setShowPreview?: (value: boolean) => void;
   showMonths: boolean;
   setShowMonths: (value: boolean) => void;
   selectedFolderId: string | null;
@@ -62,6 +65,45 @@ function normalizeBookmarkUrl(input: string) {
   };
 }
 
+function playSaveFeedback(
+  input: HTMLInputElement | null,
+  icon: HTMLDivElement | null,
+) {
+  if (!input || !icon) return;
+
+  const restingBorderColor = input.matches(":focus") ? "#404040" : "#262626";
+  input.getAnimations().forEach((animation) => {
+    animation.cancel();
+  });
+  icon.getAnimations().forEach((animation) => {
+    animation.cancel();
+  });
+
+  const timing: KeyframeAnimationOptions = {
+    duration: 900,
+    easing: "cubic-bezier(0.2, 0, 0, 1)",
+  };
+
+  input.animate(
+    [
+      { borderColor: restingBorderColor },
+      { borderColor: "#10b981", offset: 0.15 },
+      { borderColor: "#10b981", offset: 0.8 },
+      { borderColor: restingBorderColor },
+    ],
+    timing,
+  );
+  icon.animate(
+    [
+      { color: "#4a4a4a" },
+      { color: "#10b981", offset: 0.15 },
+      { color: "#10b981", offset: 0.8 },
+      { color: "#4a4a4a" },
+    ],
+    timing,
+  );
+}
+
 type Bookmark = {
   id: string;
   url: string;
@@ -77,6 +119,8 @@ type Bookmark = {
 export function BookmarkHero({
   showImages,
   setShowImages,
+  showPreview,
+  setShowPreview,
   showMonths,
   setShowMonths,
   selectedFolderId,
@@ -89,6 +133,8 @@ export function BookmarkHero({
   const [inputValue, setInputValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const inputIconRef = useRef<HTMLDivElement>(null);
   const { setSelectedFolderId } = useFolderStore();
 
   const isShared = initialIsShared;
@@ -253,6 +299,7 @@ export function BookmarkHero({
         description: null,
         folderId: selectedFolderId,
       });
+      playSaveFeedback(inputRef.current, inputIconRef.current);
       toast("Bookmark saved");
     } catch {
       toast.error("Please enter a valid URL");
@@ -285,10 +332,10 @@ export function BookmarkHero({
   };
 
   return (
-    <div className="mb-8 sm:mb-12">
+    <div className="mb-6">
       <div className="mb-3 sm:mb-4">
         {isFolderLoading ? (
-          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#1a1a1a] rounded animate-pulse" />
+          <div className="h-9 w-9 animate-pulse rounded bg-[#1a1a1a] sm:h-10 sm:w-10" />
         ) : (
           <span className="text-3xl sm:text-4xl">
             {selectedFolderIcon ?? "📁"}
@@ -296,12 +343,12 @@ export function BookmarkHero({
         )}
       </div>
 
-      <div className="flex items-center justify-between mb-6 sm:mb-8">
+      <div className="mb-6 flex items-center justify-between sm:mb-8">
         <div className="flex items-center gap-2">
           {isFolderLoading ? (
-            <div className="h-8 sm:h-9 w-40 bg-[#1a1a1a] rounded animate-pulse" />
+            <div className="h-8 w-40 animate-pulse rounded bg-[#1a1a1a] sm:h-9" />
           ) : (
-            <h1 className="text-2xl sm:text-[32px] font-bold text-[#ededed] tracking-tight">
+            <h1 className="font-bold text-2xl text-[#ededed] tracking-tight sm:text-[32px]">
               {selectedFolderName ?? "No folder selected"}
             </h1>
           )}
@@ -311,46 +358,63 @@ export function BookmarkHero({
               <TooltipTrigger>
                 <span>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="p-1.5 hover:bg-[#1a1a1a] text-[#4a4a4a] hover:text-white rounded transition-colors outline-none">
-                      <Settings2 className="w-4 h-4" />
+                    <DropdownMenuTrigger className="rounded p-1.5 text-[#4a4a4a] outline-none transition-colors hover:bg-[#1a1a1a] hover:text-white">
+                      <Settings2 className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="start"
-                      className="w-48 sm:w-52 bg-[#0a0a0a] border-[#262626]"
+                      className="w-48 border-[#262626] bg-[#0a0a0a] sm:w-52"
                     >
-                      <div className="flex items-center justify-between px-2 py-2 rounded-md hover:bg-[#1a1a1a] transition-colors">
-                        <div className="flex items-center gap-2">
-                          <ImageIcon className="w-4 h-4 text-[#666]" />
-                          <span className="text-[13px] text-[#ededed]">
-                            Show image
-                          </span>
+                      {isPublicView ? (
+                        <div className="flex items-center justify-between rounded-md px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="h-4 w-4 text-[#666]" />
+                            <span className="text-[#ededed] text-[13px]">
+                              Show image
+                            </span>
+                          </div>
+                          <Switch
+                            checked={showImages}
+                            onCheckedChange={setShowImages}
+                            className="h-4 w-7 data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333]"
+                          />
                         </div>
-                        <Switch
-                          checked={showImages}
-                          onCheckedChange={setShowImages}
-                          className="data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333] h-4 w-7"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between px-2 py-2 rounded-md hover:bg-[#1a1a1a] transition-colors">
+                      ) : (
+                        <div className="flex items-center justify-between rounded-md px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
+                          <div className="flex items-center gap-2">
+                            <Eye className="h-4 w-4 text-[#666]" />
+                            <span className="text-[#ededed] text-[13px]">
+                              Show preview
+                            </span>
+                          </div>
+                          <Switch
+                            checked={showPreview}
+                            onCheckedChange={setShowPreview}
+                            className="h-4 w-7 data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333]"
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between rounded-md px-2 py-2 transition-colors hover:bg-[#1a1a1a]">
                         <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-[#666]" />
-                          <span className="text-[13px] text-[#ededed]">
+                          <Calendar className="h-4 w-4 text-[#666]" />
+                          <span className="text-[#ededed] text-[13px]">
                             Show months
                           </span>
                         </div>
                         <Switch
                           checked={showMonths}
                           onCheckedChange={setShowMonths}
-                          className="data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333] h-4 w-7"
+                          className="h-4 w-7 data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333]"
                         />
                       </div>
-                      <div className="mt-1 pt-1 border-t border-[#262626]">
+                      <div className="mt-1 border-[#262626] border-t pt-1">
                         <button
+                          type="button"
                           onClick={handleDeleteFolder}
                           disabled={deleteFolder.isPending}
-                          className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="h-4 w-4" />
                           <span className="text-[13px]">
                             {deleteFolder.isPending
                               ? "Deleting..."
@@ -365,7 +429,7 @@ export function BookmarkHero({
               <TooltipContent
                 side="right"
                 sideOffset={10}
-                className="bg-[#1a1a1a] border-[#262626] text-[#ededed] text-xs px-2 py-1"
+                className="border-[#262626] bg-[#1a1a1a] px-2 py-1 text-[#ededed] text-xs"
               >
                 Layout settings
               </TooltipContent>
@@ -378,21 +442,21 @@ export function BookmarkHero({
             <TooltipTrigger>
               <span>
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="p-1.5 hover:bg-[#1a1a1a] text-[#4a4a4a] hover:text-white rounded transition-colors outline-none">
-                    <Share2 className="w-4 h-4 " />
+                  <DropdownMenuTrigger className="rounded p-1.5 text-[#4a4a4a] outline-none transition-colors hover:bg-[#1a1a1a] hover:text-white">
+                    <Share2 className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-64 bg-[#0a0a0a] border-[#262626] p-1"
+                    className="w-64 border-[#262626] bg-[#0a0a0a] p-1"
                   >
                     <div className="flex items-center justify-between px-1 py-1">
                       <div className="flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-[#666]" />
+                        <Globe className="h-4 w-4 text-[#666]" />
                         <div className="flex flex-col">
-                          <span className="text-[13px] text-[#ededed]">
+                          <span className="text-[#ededed] text-[13px]">
                             Public
                           </span>
-                          <span className="text-[11px] text-[#4a4a4a]">
+                          <span className="text-[#4a4a4a] text-[11px]">
                             Anyone with the link can view
                           </span>
                         </div>
@@ -401,7 +465,7 @@ export function BookmarkHero({
                         checked={isShared}
                         onCheckedChange={handleToggleShare}
                         disabled={toggleShare.isPending}
-                        className="data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333] h-4 w-7"
+                        className="h-4 w-7 data-[state=checked]:bg-[#ededed] data-[state=unchecked]:bg-[#333]"
                       />
                     </div>
 
@@ -414,8 +478,9 @@ export function BookmarkHero({
                           transition={{ duration: 0.15 }}
                         >
                           <button
+                            type="button"
                             onClick={handleCopyLink}
-                            className={`w-full flex items-center gap-2 mt-1 px-2.5 py-2 rounded-md border transition-all duration-200 bg-[#111] ${
+                            className={`mt-1 flex w-full items-center gap-2 rounded-md border bg-[#111] px-2.5 py-2 transition-all duration-200 ${
                               copied
                                 ? "border-emerald-500"
                                 : "border-[#262626] hover:border-[#404040]"
@@ -430,7 +495,7 @@ export function BookmarkHero({
                                   exit={{ scale: 0, opacity: 0 }}
                                   transition={{ duration: 0.15 }}
                                 >
-                                  <CircleCheck className="w-4 h-4 text-emerald-500" />
+                                  <CircleCheck className="h-4 w-4 text-emerald-500" />
                                 </motion.div>
                               ) : (
                                 <motion.div
@@ -440,12 +505,12 @@ export function BookmarkHero({
                                   exit={{ scale: 0, opacity: 0 }}
                                   transition={{ duration: 0.15 }}
                                 >
-                                  <Copy className="w-4 h-4 text-[#666]" />
+                                  <Copy className="h-4 w-4 text-[#666]" />
                                 </motion.div>
                               )}
                             </AnimatePresence>
                             <span
-                              className={`text-[12px] truncate ${copied ? "text-emerald-500" : "text-[#666]"}`}
+                              className={`truncate text-[12px] ${copied ? "text-emerald-500" : "text-[#666]"}`}
                             >
                               {typeof window !== "undefined"
                                 ? `${window.location.host}/f/${selectedFolderId.slice(0, 8)}...`
@@ -462,7 +527,7 @@ export function BookmarkHero({
             <TooltipContent
               side="left"
               sideOffset={10}
-              className="bg-[#1a1a1a] border-[#262626] text-[#ededed] text-xs px-2 py-1"
+              className="border-[#262626] bg-[#1a1a1a] px-2 py-1 text-[#ededed] text-xs"
             >
               Share folder
             </TooltipContent>
@@ -473,6 +538,7 @@ export function BookmarkHero({
       {!isPublicView && (
         <div className="relative">
           <input
+            ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -483,13 +549,16 @@ export function BookmarkHero({
                 : "select a folder first"
             }
             disabled={!selectedFolderId || isSaving || isFolderLoading}
-            className="w-full bg-transparent border border-[#262626] rounded-md px-3 sm:px-3 py-2 sm:py-2 text-[14px] sm:text-[15px] text-[#ededed] placeholder:text-[#4a4a4a] focus:outline-none focus:border-[#404040] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-md border border-[#262626] bg-transparent px-2.5 py-1.5 text-[#ededed] text-[14px] transition-colors duration-150 placeholder:text-[#4a4a4a] focus:border-[#404040] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-[15px]"
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div
+            ref={inputIconRef}
+            className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[#4a4a4a]"
+          >
             {isSaving ? (
-              <Loader2 className="w-4 h-4 text-[#4a4a4a] animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin text-current" />
             ) : (
-              <Link2 className="w-4 h-4 text-[#4a4a4a]" />
+              <Link2 className="h-4 w-4 text-current" />
             )}
           </div>
         </div>
