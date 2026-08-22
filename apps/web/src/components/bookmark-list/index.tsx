@@ -2,12 +2,23 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BookmarkActions } from "@/components/bookmark-actions";
+import { LabelFilter } from "@/components/label-filter";
+import { orpc } from "@/utils/orpc";
 import {
 	BookmarkListItem,
 	type BookmarkListItemMetadata,
 } from "./bookmark-list";
-import { orpc } from "@/utils/orpc";
+
+type BookmarkLabel = {
+	id: string;
+	createdAt: Date;
+	updatedAt: Date;
+	name: string;
+	userId: string;
+	color: string;
+};
 
 type Bookmark = {
 	id: string;
@@ -19,6 +30,7 @@ type Bookmark = {
 	folderId: string;
 	createdAt: Date;
 	updatedAt: Date;
+	labels: BookmarkLabel[];
 };
 
 type BookmarkListProps = {
@@ -26,6 +38,7 @@ type BookmarkListProps = {
 	showMonths: boolean;
 	selectedFolderId: string | null;
 	folders: Array<{ id: string; name: string; icon: string }>;
+	labels: BookmarkLabel[];
 };
 
 const BOOKMARK_SKELETONS = [
@@ -104,13 +117,34 @@ export function BookmarkList({
 	showMonths,
 	selectedFolderId,
 	folders,
+	labels,
 }: BookmarkListProps) {
+	const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
 	const { data: bookmarks = [], isPending } = useQuery({
 		...orpc.bookmark.getByFolder.queryOptions({
 			input: { folderId: selectedFolderId ?? "" },
 		}),
 		enabled: !!selectedFolderId,
 	});
+
+	useEffect(() => {
+		if (
+			selectedLabelId &&
+			!labels.some((label) => label.id === selectedLabelId)
+		) {
+			setSelectedLabelId(null);
+		}
+	}, [labels, selectedLabelId]);
+
+	const filteredBookmarks = useMemo(
+		() =>
+			selectedLabelId
+				? bookmarks.filter((bookmark) =>
+						bookmark.labels.some((label) => label.id === selectedLabelId),
+					)
+				: bookmarks,
+		[bookmarks, selectedLabelId],
+	);
 
 	if (!selectedFolderId) {
 		return (
@@ -142,7 +176,7 @@ export function BookmarkList({
 	}
 
 	const groupedBookmarks = showMonths
-		? bookmarks.reduce(
+		? filteredBookmarks.reduce(
 				(groups, bookmark) => {
 					const month = formatMonth(bookmark.createdAt);
 					if (!groups[month]) groups[month] = [];
@@ -151,54 +185,97 @@ export function BookmarkList({
 				},
 				{} as Record<string, Bookmark[]>,
 			)
-		: { all: bookmarks };
+		: { all: filteredBookmarks };
 
 	return (
-		<div className="space-y-6">
-			{Object.entries(groupedBookmarks).map(([month, items]) => (
-				<section key={month}>
-					{showMonths && month !== "all" && (
-						<h2 className="mb-3 font-medium text-[#4a4a4a] text-[10px] uppercase tracking-wider sm:text-[11px]">
-							{month}
-						</h2>
-					)}
+		<div>
+			<div className="mb-4">
+				<LabelFilter
+					labels={labels}
+					value={selectedLabelId}
+					onChange={setSelectedLabelId}
+				/>
+			</div>
+			{filteredBookmarks.length === 0 ? (
+				<div className="py-12 text-center text-[#4a4a4a]">
+					<p>No links match this label.</p>
+				</div>
+			) : (
+				<div className="space-y-6">
+					{Object.entries(groupedBookmarks).map(([month, items]) => (
+						<section key={month}>
+							{showMonths && month !== "all" && (
+								<h2 className="mb-3 font-medium text-[#4a4a4a] text-[10px] uppercase tracking-wider sm:text-[11px]">
+									{month}
+								</h2>
+							)}
 
-					<div
-						className="relative flex flex-col items-stretch gap-2"
-						onPointerOver={moveRowHighlight}
-						onPointerLeave={hideRowHighlight}
-					>
-						<span
-							aria-hidden="true"
-							data-bookmark-highlight
-							className="pointer-events-none absolute inset-x-0 top-0 z-0 rounded-[5px] bg-[#111] opacity-0"
-						/>
-						{items.map((bookmark) => (
 							<div
-								key={bookmark.id}
-								data-bookmark-row={bookmark.id}
-								className="relative z-10 flex items-center rounded-[5px] has-[:focus-visible]:bg-[#111] has-[[data-state=open]]:bg-[#111]"
+								className="relative flex flex-col items-stretch gap-2"
+								onPointerOver={moveRowHighlight}
+								onPointerLeave={hideRowHighlight}
 							>
-								<BookmarkListItem
-									url={bookmark.url}
-									metadata={getBookmarkMetadata(bookmark)}
-									prefetch="hover"
-									showPreview={showPreview}
-									variant="row"
-									className="dark min-w-0 flex-1"
-									previewClassName="dark"
+								<span
+									aria-hidden="true"
+									data-bookmark-highlight
+									className="pointer-events-none absolute inset-x-0 top-0 z-0 rounded-[5px] bg-[#111] opacity-0"
 								/>
-								<BookmarkActions
-									bookmark={bookmark}
-									currentFolderId={selectedFolderId}
-									folders={folders}
-									alwaysVisible
-								/>
+								{items.map((bookmark) => (
+									<div
+										key={bookmark.id}
+										data-bookmark-row={bookmark.id}
+										className="relative z-10 flex items-center rounded-[5px] has-[:focus-visible]:bg-[#111] has-[[data-state=open]]:bg-[#111]"
+									>
+										<BookmarkListItem
+											url={bookmark.url}
+											metadata={getBookmarkMetadata(bookmark)}
+											prefetch="hover"
+											showPreview={showPreview}
+											variant="row"
+											className="dark min-w-0 flex-1"
+											previewClassName="dark"
+										/>
+										{bookmark.labels.length > 0 ? (
+											<span
+												className="ms-2 me-0.5 flex shrink-0 items-center gap-1"
+												title={bookmark.labels
+													.map((label) => label.name)
+													.join(", ")}
+											>
+												<span className="sr-only">
+													Labels:{" "}
+													{bookmark.labels
+														.map((label) => label.name)
+														.join(", ")}
+												</span>
+												{bookmark.labels.slice(0, 3).map((label) => (
+													<span
+														key={label.id}
+														className="size-1.5 rounded-full"
+														style={{ backgroundColor: label.color }}
+													/>
+												))}
+												{bookmark.labels.length > 3 ? (
+													<span className="text-[#555] text-[10px]">
+														+{bookmark.labels.length - 3}
+													</span>
+												) : null}
+											</span>
+										) : null}
+										<BookmarkActions
+											bookmark={bookmark}
+											currentFolderId={selectedFolderId}
+											folders={folders}
+											labels={labels}
+											alwaysVisible
+										/>
+									</div>
+								))}
 							</div>
-						))}
-					</div>
-				</section>
-			))}
+						</section>
+					))}
+				</div>
+			)}
 		</div>
 	);
 }
