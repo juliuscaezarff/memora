@@ -22,6 +22,16 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  EmojiPicker,
+  EmojiPickerContent,
+  EmojiPickerSearch,
+} from "@/components/ui/emoji-picker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
@@ -116,6 +126,105 @@ type Bookmark = {
   updatedAt: Date;
 };
 
+function focusInput(element: HTMLInputElement | null) {
+  element?.focus();
+}
+
+function FolderEmojiEditor({
+  icon,
+  onSelect,
+}: {
+  icon: string;
+  onSelect: (icon: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger
+        aria-label="Change folder icon"
+        className="-ms-2.5 block w-fit cursor-pointer rounded-md p-1 text-3xl leading-none outline-none sm:text-4xl"
+      >
+        {icon}
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-fit overflow-hidden rounded-md border-[#262626] bg-[#0a0a0a] p-0"
+      >
+        <EmojiPicker
+          className="h-[320px] rounded-md bg-[#0a0a0a]"
+          onEmojiSelect={({ emoji }) => {
+            onSelect(emoji);
+            setIsOpen(false);
+          }}
+        >
+          <EmojiPickerSearch
+            placeholder="Search emoji..."
+            className="border-[#262626]"
+          />
+          <EmojiPickerContent />
+        </EmojiPicker>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function FolderNameEditor({
+  folderId,
+  name,
+  onCommit,
+}: {
+  folderId: string;
+  name: string;
+  onCommit: (name: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+
+  const commitName = (value: string) => {
+    setIsEditing(false);
+    onCommit(value);
+  };
+
+  if (!isEditing) {
+    return (
+      <h1 className="font-bold text-2xl text-[#ededed] leading-tight tracking-tight sm:text-[32px]">
+        <button
+          type="button"
+          onClick={() => setIsEditing(true)}
+          className="cursor-text text-left outline-none"
+          aria-label="Edit folder name"
+        >
+          {name}
+        </button>
+      </h1>
+    );
+  }
+
+  return (
+    <input
+      key={folderId}
+      type="text"
+      defaultValue={name}
+      maxLength={50}
+      ref={focusInput}
+      aria-label="Folder name"
+      onBlur={(event) => commitName(event.currentTarget.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.currentTarget.value = name;
+          event.currentTarget.blur();
+        }
+      }}
+      className="min-w-[1ch] max-w-[calc(100vw-9rem)] appearance-none border-0 bg-transparent p-0 font-bold text-2xl text-[#ededed] leading-tight tracking-tight outline-none [field-sizing:content] sm:max-w-md sm:text-[32px]"
+    />
+  );
+}
+
 export function BookmarkHero({
   showImages,
   setShowImages,
@@ -144,6 +253,59 @@ export function BookmarkHero({
   }).queryKey;
 
   const foldersQueryKey = orpc.folder.getAll.queryOptions().queryKey;
+
+  const updateFolder = useMutation(
+    orpc.folder.update.mutationOptions({
+      onMutate: async (updatedFolder) => {
+        await queryClient.cancelQueries({ queryKey: foldersQueryKey });
+
+        const previousFolder = queryClient
+          .getQueryData(foldersQueryKey)
+          ?.find((folder) => folder.id === updatedFolder.id);
+
+        queryClient.setQueryData(foldersQueryKey, (old = []) =>
+          old.map((folder) =>
+            folder.id === updatedFolder.id
+              ? {
+                  ...folder,
+                  ...(updatedFolder.name !== undefined && {
+                    name: updatedFolder.name,
+                  }),
+                  ...(updatedFolder.icon !== undefined && {
+                    icon: updatedFolder.icon,
+                  }),
+                }
+              : folder,
+          ),
+        );
+
+        return { previousFolder };
+      },
+      onError: (error, updatedFolder, context) => {
+        const previousFolder = context?.previousFolder;
+        if (previousFolder) {
+          queryClient.setQueryData(foldersQueryKey, (old = []) =>
+            old.map((folder) =>
+              folder.id === updatedFolder.id
+                ? {
+                    ...folder,
+                    ...(updatedFolder.name !== undefined &&
+                      folder.name === updatedFolder.name && {
+                      name: previousFolder.name,
+                    }),
+                    ...(updatedFolder.icon !== undefined &&
+                      folder.icon === updatedFolder.icon && {
+                      icon: previousFolder.icon,
+                    }),
+                  }
+                : folder,
+            ),
+          );
+        }
+        toast.error(error.message || "Failed to update folder");
+      },
+    }),
+  );
 
   const toggleShare = useMutation(
     orpc.folder.toggleShare.mutationOptions({
@@ -331,11 +493,32 @@ export function BookmarkHero({
     deleteFolder.mutate({ id: selectedFolderId });
   };
 
+  const handleFolderIconChange = (icon: string) => {
+    if (!selectedFolderId || icon === selectedFolderIcon) return;
+    updateFolder.mutate({ id: selectedFolderId, icon });
+  };
+
+  const handleFolderNameCommit = (value: string) => {
+    const name = value.trim();
+    if (!name) {
+      toast.error("Folder name cannot be empty");
+      return;
+    }
+    if (!selectedFolderId || name === selectedFolderName) return;
+
+    updateFolder.mutate({ id: selectedFolderId, name });
+  };
+
   return (
     <div className="mb-6">
       <div className="mb-3 sm:mb-4">
         {isFolderLoading ? (
           <div className="h-9 w-9 animate-pulse rounded bg-[#1a1a1a] sm:h-10 sm:w-10" />
+        ) : !isPublicView && selectedFolderId ? (
+          <FolderEmojiEditor
+            icon={selectedFolderIcon ?? "📁"}
+            onSelect={handleFolderIconChange}
+          />
         ) : (
           <span className="-ms-1.5 block w-fit text-3xl sm:text-4xl">
             {selectedFolderIcon ?? "📁"}
@@ -347,6 +530,12 @@ export function BookmarkHero({
         <div className="flex items-center gap-2">
           {isFolderLoading ? (
             <div className="h-8 w-40 animate-pulse rounded bg-[#1a1a1a] sm:h-9" />
+          ) : !isPublicView && selectedFolderId ? (
+            <FolderNameEditor
+              folderId={selectedFolderId}
+              name={selectedFolderName ?? "No folder selected"}
+              onCommit={handleFolderNameCommit}
+            />
           ) : (
             <h1 className="font-bold text-2xl text-[#ededed] tracking-tight sm:text-[32px]">
               {selectedFolderName ?? "No folder selected"}
