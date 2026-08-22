@@ -97,7 +97,7 @@ export function UserAvatar({
 		<Avatar className={cn("overflow-hidden", className)}>
 			{avatarSeed ? (
 				<Facehash
-					aria-label={`Avatar de ${displayName}`}
+					aria-label={`${displayName}'s avatar`}
 					className="rounded-full text-white"
 					colors={FACEHASH_COLORS}
 					interactive={false}
@@ -108,7 +108,7 @@ export function UserAvatar({
 			) : (
 				<>
 					<AvatarImage
-						alt={`Foto de ${displayName}`}
+						alt={`${displayName}'s profile photo`}
 						src={image ?? undefined}
 					/>
 					<AvatarFallback className="bg-[#1a1a1a] text-[#ededed]">
